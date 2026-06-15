@@ -96,5 +96,6 @@ nav:
       - vLLM/Ascend/Omni 模块导图: omni/vllm-omni-npu.md
       - Qwen3-Omni 在 NPU 上是怎么跑起来的: omni/qwen3-omni-npu.md
       - Omni 平台无关/相关解耦：现状与演进: omni/platform-decoupling.md
+      - vLLM IR 是什么：从 CustomOp 的困境说起: omni/vllm-ir-and-customop.md
   - 零散知识:
       - notes/index.md
