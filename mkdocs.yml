@@ -93,5 +93,7 @@ nav:
   - 首页: index.md
   - Omni 学习笔记:
       - omni/index.md
+      - vLLM/Ascend/Omni 模块导图: omni/vllm-omni-npu.md
+      - Qwen3-Omni 在 NPU 上是怎么跑起来的: omni/qwen3-omni-npu.md
   - 零散知识:
       - notes/index.md

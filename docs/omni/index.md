@@ -6,7 +6,8 @@
 
 > 随着学习推进逐步补充。建议每个主题单独建一篇 `.md`，并在下方与 `mkdocs.yml` 的 `nav` 中登记。
 
-- _（待补充）_
+- [vLLM / vllm-ascend / vllm-omni 模块导图与 Omni NPU 适配研究方向](vllm-omni-npu.md)
+- [Qwen3-Omni 在 NPU 上是怎么跑起来的](qwen3-omni-npu.md)
 
 ## 如何新增一篇笔记
 
