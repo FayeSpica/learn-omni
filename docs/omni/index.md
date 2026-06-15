@@ -10,6 +10,7 @@
 - [Qwen3-Omni 在 NPU 上是怎么跑起来的](qwen3-omni-npu.md)
 - [Omni 平台无关/相关解耦：现状与演进](platform-decoupling.md)
 - [vLLM IR 是什么：从 CustomOp 的困境说起](vllm-ir-and-customop.md)
+- [以 Qwen3-Omni 拆解 vllm-omni 核心组件与请求流转](components-request-flow.md)
 
 ## 如何新增一篇笔记
 

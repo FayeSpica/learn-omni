@@ -97,5 +97,6 @@ nav:
       - Qwen3-Omni 在 NPU 上是怎么跑起来的: omni/qwen3-omni-npu.md
       - Omni 平台无关/相关解耦：现状与演进: omni/platform-decoupling.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: omni/vllm-ir-and-customop.md
+      - 以 Qwen3-Omni 拆解核心组件与请求流转: omni/components-request-flow.md
   - 零散知识:
       - notes/index.md
