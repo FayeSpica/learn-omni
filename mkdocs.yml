@@ -100,3 +100,4 @@ nav:
       - 以 Qwen3-Omni 拆解核心组件与请求流转: omni/components-request-flow.md
   - 零散知识:
       - notes/index.md
+      - 昇腾量化特性支持速查: notes/ascend-quantization.md

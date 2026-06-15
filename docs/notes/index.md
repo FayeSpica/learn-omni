@@ -6,7 +6,9 @@
 
 > 内容增多后，可按主题拆分子目录（如 `notes/git/`、`notes/linux/`），并在 `mkdocs.yml` 的 `nav` 中分组。
 
-- _（待补充）_
+### 昇腾 / NPU
+
+- [昇腾(vllm-ascend)量化特性支持速查](ascend-quantization.md) — W8A8 / W4A8 / W4A4 / MXFP8 / KV C8 支持矩阵
 
 ## 如何新增一条知识
 
