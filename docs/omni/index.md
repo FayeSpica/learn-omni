@@ -8,6 +8,7 @@
 
 - [vLLM / vllm-ascend / vllm-omni 模块导图与 Omni NPU 适配研究方向](vllm-omni-npu.md)
 - [Qwen3-Omni 在 NPU 上是怎么跑起来的](qwen3-omni-npu.md)
+- [Omni 平台无关/相关解耦：现状与演进](platform-decoupling.md)
 
 ## 如何新增一篇笔记
 
