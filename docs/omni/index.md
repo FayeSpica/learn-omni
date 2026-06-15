@@ -1,0 +1,20 @@
+# Omni 学习笔记
+
+这里系统性地记录学习 omni 的过程。
+
+## 目录
+
+> 随着学习推进逐步补充。建议每个主题单独建一篇 `.md`，并在下方与 `mkdocs.yml` 的 `nav` 中登记。
+
+- _（待补充）_
+
+## 如何新增一篇笔记
+
+1. 在 `docs/omni/` 下新建 Markdown 文件，例如 `docs/omni/getting-started.md`
+2. 在 `mkdocs.yml` 的 `nav` → `Omni 学习笔记` 下添加一行：
+
+   ```yaml
+   - 快速开始: omni/getting-started.md
+   ```
+
+3. 本地预览：`mkdocs serve`，推送到 `main` 后自动部署
