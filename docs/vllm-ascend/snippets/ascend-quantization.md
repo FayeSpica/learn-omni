@@ -77,4 +77,4 @@ tags:
 ---
 
 !!! info "说明"
-    支持矩阵来自源码 `@register_scheme` 注册项快照,随版本更新可能增减(尤其 W4A4 的 MoE 支持在持续补齐)。落地前建议在目标版本仓库重新 `grep -rn "@register_scheme" vllm_ascend/quantization/methods/` 核对。相关:[Qwen3-Omni 在 NPU 上是怎么跑起来的](../vllm-omni/qwen3-omni-npu.md)。
+    支持矩阵来自源码 `@register_scheme` 注册项快照,随版本更新可能增减(尤其 W4A4 的 MoE 支持在持续补齐)。落地前建议在目标版本仓库重新 `grep -rn "@register_scheme" vllm_ascend/quantization/methods/` 核对。相关:[Qwen3-Omni 在 NPU 上是怎么跑起来的](../../vllm-omni/qwen3-omni-npu.md)。

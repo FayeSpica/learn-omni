@@ -11,6 +11,9 @@
 - [Omni 平台无关/相关解耦：现状与演进](platform-decoupling.md)
 - [以 Qwen3-Omni 拆解 vllm-omni 核心组件与请求流转](components-request-flow.md)
 
+另见 [碎片知识](snippets/index.md)：
+- [npu_model_runner 的上游适配困境与解耦](snippets/npu-runner-decoupling.md) — 从 PR #4454 拆解三套 runner 的继承断链
+
 ## 如何新增一篇笔记
 
 1. 在 `docs/vllm-omni/` 下新建 Markdown 文件，例如 `docs/vllm-omni/getting-started.md`

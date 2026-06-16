@@ -8,6 +8,8 @@
 
 - [vLLM IR 是什么：从 CustomOp 的困境说起](vllm-ir-and-customop.md)
 
+另见 [碎片知识](snippets/index.md)：速查、排错、源码片段等零散条目。
+
 ## 如何新增一篇笔记
 
 1. 在 `docs/vllm/` 下新建 Markdown 文件，例如 `docs/vllm/scheduler.md`
