@@ -6,25 +6,33 @@ hide:
 
 # Learn Omni
 
-欢迎来到我的学习与知识库。这里分两部分内容：
+欢迎来到我的学习与知识库。学习笔记按项目分成三块：**vLLM 内核 → vllm-ascend 昇腾适配 → vllm-omni 任意模态框架**，从下到上分层。
 
 <div class="grid cards" markdown>
 
--   :material-notebook-edit:{ .lg .middle } __Omni 学习笔记__
+-   :material-engine:{ .lg .middle } __vLLM__
 
     ---
 
-    系统性记录学习 omni 的过程：概念、原理、实践与踩坑。
+    硬件无关的推理引擎内核：引擎骨架、算子分发、编译与中间表示（IR）。
 
-    [:octicons-arrow-right-24: 进入笔记](omni/index.md)
+    [:octicons-arrow-right-24: 进入笔记](vllm/index.md)
 
--   :material-lightbulb-on:{ .lg .middle } __零散知识__
+-   :material-chip:{ .lg .middle } __vllm-ascend__
 
     ---
 
-    把平时积累的零散知识点、技巧、速查整理公开。
+    vLLM 在昇腾 NPU 上的适配层：Platform/Worker 适配、量化、算子与设备管理。
 
-    [:octicons-arrow-right-24: 进入知识库](notes/index.md)
+    [:octicons-arrow-right-24: 进入笔记](vllm-ascend/index.md)
+
+-   :material-layers-triple:{ .lg .middle } __vllm-omni__
+
+    ---
+
+    任意模态服务框架：多引擎/多阶段编排、平台解耦，及 Qwen3-Omni 等模型落地。
+
+    [:octicons-arrow-right-24: 进入笔记](vllm-omni/index.md)
 
 </div>
 

@@ -1,17 +1,21 @@
 # learn-omni
 
-omni 学习笔记与零散知识库，基于 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) 构建，部署在 GitHub Pages。
+vLLM / vllm-ascend / vllm-omni 学习笔记，基于 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) 构建，部署在 GitHub Pages。
 
 🔗 在线访问：<https://fayespica.github.io/learn-omni/>
 
 ## 目录结构
 
+学习笔记按项目分成三块：
+
 ```
 docs/
 ├── index.md          # 首页
-├── omni/             # omni 学习笔记
+├── vllm/             # vLLM 内核
 │   └── index.md
-└── notes/            # 零散知识
+├── vllm-ascend/      # vllm-ascend 昇腾适配
+│   └── index.md
+└── vllm-omni/        # vllm-omni 任意模态框架
     └── index.md
 mkdocs.yml            # 站点配置与导航
 requirements.txt      # 构建依赖
@@ -35,5 +39,5 @@ mkdocs serve
 
 ## 新增内容
 
-- omni 笔记放在 `docs/omni/`，零散知识放在 `docs/notes/`
+- 按主题放入对应目录：`docs/vllm/`、`docs/vllm-ascend/`、`docs/vllm-omni/`
 - 新增文件后，在 `mkdocs.yml` 的 `nav` 中登记对应入口

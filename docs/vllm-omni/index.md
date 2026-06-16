@@ -1,6 +1,6 @@
-# Omni 学习笔记
+# vllm-omni
 
-这里系统性地记录学习 omni 的过程。
+记录在 vLLM 之上构建的任意模态服务框架 `vllm-omni`：多引擎/多阶段编排、平台解耦、核心组件与请求流转，以及 Qwen3-Omni 等具体模型在 NPU 上的落地。
 
 ## 目录
 
@@ -9,16 +9,15 @@
 - [vLLM / vllm-ascend / vllm-omni 模块导图与 Omni NPU 适配研究方向](vllm-omni-npu.md)
 - [Qwen3-Omni 在 NPU 上是怎么跑起来的](qwen3-omni-npu.md)
 - [Omni 平台无关/相关解耦：现状与演进](platform-decoupling.md)
-- [vLLM IR 是什么：从 CustomOp 的困境说起](vllm-ir-and-customop.md)
 - [以 Qwen3-Omni 拆解 vllm-omni 核心组件与请求流转](components-request-flow.md)
 
 ## 如何新增一篇笔记
 
-1. 在 `docs/omni/` 下新建 Markdown 文件，例如 `docs/omni/getting-started.md`
-2. 在 `mkdocs.yml` 的 `nav` → `Omni 学习笔记` 下添加一行：
+1. 在 `docs/vllm-omni/` 下新建 Markdown 文件，例如 `docs/vllm-omni/getting-started.md`
+2. 在 `mkdocs.yml` 的 `nav` → `vllm-omni` 下添加一行：
 
    ```yaml
-   - 快速开始: omni/getting-started.md
+   - 快速开始: vllm-omni/getting-started.md
    ```
 
 3. 本地预览：`mkdocs serve`，推送到 `main` 后自动部署
