@@ -6,9 +6,17 @@ hide:
 
 # Learn Omni
 
-欢迎来到我的学习与知识库。学习笔记按项目分成三块：**vLLM 内核 → vllm-ascend 昇腾适配 → vllm-omni 任意模态框架**，从下到上分层。每块下都设「碎片知识」收录速查、排错与源码片段。
+欢迎来到我的学习与知识库。先打 **LLM 基础**，再按项目分三块：**vLLM 内核 → vllm-ascend 昇腾适配 → vllm-omni 任意模态框架**，从下到上分层。每块下都设「碎片知识」收录速查、排错与源码片段。
 
 <div class="grid cards" markdown>
+
+-   :material-school:{ .lg .middle } __LLM 基础__
+
+    ---
+
+    问题驱动打底：KV Cache 显存、带宽/算力、并发估算等推理基本功。
+
+    [:octicons-arrow-right-24: 进入笔记](llm-basics/index.md) · [碎片知识](llm-basics/snippets/index.md)
 
 -   :material-engine:{ .lg .middle } __vLLM__
 

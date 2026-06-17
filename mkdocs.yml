@@ -91,6 +91,11 @@ extra_javascript:
 
 nav:
   - 首页: index.md
+  - LLM 基础:
+      - llm-basics/index.md
+      - 每生成一个 Token 的 KV Cache 显存: llm-basics/kv-cache-per-token.md
+      - 碎片知识:
+          - llm-basics/snippets/index.md
   - vLLM:
       - vllm/index.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: vllm/vllm-ir-and-customop.md
