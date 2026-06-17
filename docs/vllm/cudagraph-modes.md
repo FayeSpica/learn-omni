@@ -97,6 +97,64 @@ omni 通过平台 hook 决定「用哪种图包装器」，再在多阶段流水
 
 配置入口：`--enforce-eager` 或 `compilation_config.cudagraph_mode`；NPU 同样经 ascend forward context 落到 `aclgraph_runtime_mode`。
 
+## 六、捕获是怎么发生的：图模式 ↔ `_dummy_run`
+
+**图模式只是「想怎么捕获」的声明；`_dummy_run` 才是真正「跑一遍假前向、把图录下来」的执行器。** 没有 `_dummy_run`，图模式就只是个 enum。
+
+`_dummy_run` 一身三用，靠参数切换（vLLM 基类签名，omni NPU 版原样继承）：
+
+```python
+def _dummy_run(self, num_tokens,
+               cudagraph_runtime_mode: CUDAGraphMode | None = None,  # ← 图模式从这进来
+               force_attention=False, uniform_decode=False,
+               is_profile=False, ...):
+    """Run a dummy forward pass to warm up / profile / capture the cudagraph."""
+```
+
+| 角色 | 触发条件 | 与图模式的关系 |
+|---|---|---|
+| **warmup** | `cudagraph_runtime_mode=NONE` | 触发 torch.compile、分配 workspace，为捕获做准备（eager 跑） |
+| **profile** | `is_profile=True` → `force_eager` | 跑最大形状估峰值显存、定 KV 预算，**绝不捕获** |
+| **capture** | `cudagraph_runtime_mode=PIECEWISE/FULL` | **真正录图**：按该模式设 forward context，让 `ACLGraphWrapper`/cudagraph wrapper 录下这次假前向 |
+
+### 图捕获怎么驱动 `_dummy_run`
+
+`capture_model()` 的本质就是「对每个要捕获的 batch size，调一次带模式的 `_dummy_run`」：
+
+```
+capture_model():
+  for size in cudagraph_capture_sizes:        # 如 [1,2,4,8,...,256]
+      _dummy_run(size,
+                 cudagraph_runtime_mode = <PIECEWISE 或 FULL>,
+                 uniform_decode = <decode 批就 True>)
+```
+
+**图模式决定 `_dummy_run` 录什么**：
+
+- **PIECEWISE**：假前向里 attention 在图外、其余段进图 → 录「分段图」。
+- **FULL**：要把 attention 也录进去，所以 `_dummy_run` 必须：
+  - `uniform_decode=True`（内部 `max_query_len=1`）→ **伪造一个「均匀 decode 批」形状**（FULL 只在统一形状下可用）；
+  - `force_attention=True` → 即便无真请求也**强制构造 attn metadata 并真跑 attention**，否则没东西可录。
+- **NONE / profile**：`force_eager`，只热身/测显存，不录。
+
+> 即：`uniform_decode`、`force_attention` 就是 `_dummy_run` 为「满足 FULL 的捕获前提」而伪造的输入形状与执行路径。
+
+### omni 特有
+
+1. **多阶段额外捕获**：`NPUARModelRunner.capture_model` 在父类循环之外手写 `_capture_talker_mtp_graphs`——同一套模式的微缩版（`NONE` warmup → `FULL` 录），但不复用 `_dummy_run`，而是直接喂 talker_mtp 的预分配 buffer，因为这是 base `capture_model` 不认识的 omni 子模块。
+2. **profile 估 KV 预算**：`NPUGenerationModelRunner.profile_run` → `_dummy_run(max_num_tokens, is_profile=True)`，跑最大形状（eager）测峰值显存，直接喂给 [KV Cache 容量估算](../llm-basics/kv-cache-per-token.md)。
+3. **别混淆的同名调用**：`execute_model` 里的 `self._dummy_run(1)` **与图捕获无关**——是 DP + external_launcher 下「本 rank 无 token 也陪跑一次保持 DP 同步」的兜底。
+
+### 串起来：capture 期 vs serve 期
+
+```
+启动 capture 期：  capture_model → 循环 _dummy_run(size, mode=FULL/PIECEWISE) → 录下每个 size 的图
+线上 serve 期：    真实 batch → padding 到最近的 captured size → replay 对应图
+                   超出所有 captured size / 形状不匹配 → 回退 eager 或 piecewise
+```
+
+**`_dummy_run` 是 capture 期的主角，图模式是它的指挥棒；serve 期则去 replay 这些录好的图。**
+
 ## 小结
 
 | 模式 | attention 在哪 | 适用 | 形状要求 |
