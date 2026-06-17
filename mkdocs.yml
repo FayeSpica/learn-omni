@@ -96,6 +96,11 @@ nav:
       - 每生成一个 Token 的 KV Cache 显存: llm-basics/kv-cache-per-token.md
       - 碎片知识:
           - llm-basics/snippets/index.md
+  - 生成模型基础:
+      - generative-basics/index.md
+      - DiT 是什么，核心流程: generative-basics/dit.md
+      - 碎片知识:
+          - generative-basics/snippets/index.md
   - vLLM:
       - vllm/index.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: vllm/vllm-ir-and-customop.md

@@ -18,6 +18,14 @@ hide:
 
     [:octicons-arrow-right-24: 进入笔记](llm-basics/index.md) · [碎片知识](llm-basics/snippets/index.md)
 
+-   :material-image-multiple:{ .lg .middle } __生成模型基础__
+
+    ---
+
+    扩散与多模态生成打底：DiT、VAE、采样器、flow matching、生成管线。
+
+    [:octicons-arrow-right-24: 进入笔记](generative-basics/index.md) · [碎片知识](generative-basics/snippets/index.md)
+
 -   :material-engine:{ .lg .middle } __vLLM__
 
     ---
