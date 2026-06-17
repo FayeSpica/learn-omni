@@ -104,6 +104,7 @@ nav:
   - vLLM:
       - vllm/index.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: vllm/vllm-ir-and-customop.md
+      - 图模式：eager / PIECEWISE / FULL: vllm/cudagraph-modes.md
       - 碎片知识:
           - vllm/snippets/index.md
   - vllm-ascend:

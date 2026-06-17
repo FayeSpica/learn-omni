@@ -11,6 +11,7 @@
 - [Omni 平台无关/相关解耦：现状与演进](platform-decoupling.md)
 - [以 Qwen3-Omni 拆解 vllm-omni 核心组件与请求流转](components-request-flow.md)
 - [platforms/npu 架构导读：读 vllm-omni 昇腾后端的入口地图](npu-platform-architecture.md)
+- 相关（vLLM 板块）：[图模式：eager / PIECEWISE / FULL](../vllm/cudagraph-modes.md) — 含 omni 多阶段图捕获
 
 另见 [碎片知识](snippets/index.md)：
 - [npu_model_runner 的上游适配困境与解耦](snippets/npu-runner-decoupling.md) — 从 PR #4454 拆解三套 runner 的继承断链

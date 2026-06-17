@@ -7,6 +7,7 @@
 > 随着学习推进逐步补充。建议每个主题单独建一篇 `.md`，并在下方与 `mkdocs.yml` 的 `nav` 中登记。
 
 - [vLLM IR 是什么：从 CustomOp 的困境说起](vllm-ir-and-customop.md)
+- [图模式：eager / PIECEWISE / FULL（GPU·NPU·omni 三层串讲）](cudagraph-modes.md)
 
 另见 [碎片知识](snippets/index.md)：速查、排错、源码片段等零散条目。
 

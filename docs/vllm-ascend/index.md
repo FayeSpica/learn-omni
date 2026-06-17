@@ -7,6 +7,7 @@
 > 随着学习推进逐步补充。建议每个主题单独建一篇 `.md`，并在下方与 `mkdocs.yml` 的 `nav` 中登记。
 
 - 暂无系统笔记，待补充。
+- 相关（vLLM 板块）：[图模式：eager / PIECEWISE / FULL](../vllm/cudagraph-modes.md) — 含昇腾 ACL Graph 的对应
 
 另见 [碎片知识](snippets/index.md)：
 - [昇腾(vllm-ascend)量化特性支持速查](snippets/ascend-quantization.md) — W8A8 / W4A8 / W4A4 / MXFP8 / KV C8 支持矩阵
