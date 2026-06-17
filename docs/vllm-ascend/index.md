@@ -10,6 +10,7 @@
 
 另见 [碎片知识](snippets/index.md)：
 - [昇腾(vllm-ascend)量化特性支持速查](snippets/ascend-quantization.md) — W8A8 / W4A8 / W4A4 / MXFP8 / KV C8 支持矩阵
+- [昇腾代次与原生低精度格式(A2/A3/A5·950)](snippets/ascend-generations-low-precision.md) — 各硬件代次原生支持的 FP8 / MXFP8 / HiF8 / MXFP4 / INT8 对比与 950 算力表
 
 ## 如何新增一篇笔记
 
