@@ -1,12 +1,13 @@
 # 生成模型基础
 
-打底生成式模型（扩散、自回归图像/音频、VAE、采样器等）的核心概念与流程，和 [LLM 基础](../llm-basics/index.md) 并列——后者偏文本自回归推理，这里偏多模态生成。
+打底生成式与多模态模型（扩散、视觉编码、VAE、采样器等）的核心概念与流程，和 [LLM 基础](../llm-basics/index.md) 并列——后者偏文本自回归推理，这里偏视觉/多模态生成与理解。
 
 ## 目录
 
 > 随学习推进逐步补充。
 
 - [DiT 是什么，核心流程](dit.md) — Diffusion Transformer 的定义、三大构件、推理/训练流程、与 U-Net/LLM 的差异
+- [ViT 是什么，核心流程](vit.md) — Vision Transformer：patchify 流程、在 VLM 里当视觉编码器、与 DiT 的异同
 
 待补充方向：
 
