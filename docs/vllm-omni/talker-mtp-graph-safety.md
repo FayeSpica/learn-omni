@@ -57,7 +57,23 @@ flowchart LR
 
 **CodePredictorAttention 的性能,正是来自这第 2 层"code_predictor 自己的内层 device graph",与 talker_mtp 整体是否被外层图封装无关。** 记住这一点,后面修复不丢性能的根据就在这。
 
-## 三、我们面临的问题
+## 三、哪些模型支持 talker_mtp
+
+`vllm_omni/model_executor/models/` 下定义了 `talker_mtp` 的模型共 **3 个**:
+
+| 模型 | 文件 | `talker_mtp_graph_safe` | 有独立 talker(`self.talker`)? | code predictor | NPU 上是否被 FULL 封装 |
+|---|---|---|---|---|---|
+| **Fish Speech**(Slow AR) | `fish_speech/fish_speech_slow_ar.py` | ✅ `True` | 否(模型本身即 talker) | 自带 `fast_ar`(`FishSpeechFastAR`) | **会**(显式声明可录,符合预期) |
+| **Qwen3-TTS**(Talker) | `qwen3_tts/qwen3_tts_talker.py` | ❌ 未设(=False) | 否(TTS 模型本身即 talker) | 共享 `common.qwen3_code_predictor` | **不会**(非 graph_safe 且无独立 talker) |
+| **Qwen3-Omni** | `qwen3_omni/qwen3_omni.py` | ❌ 未设(=False) | ✅ 有 | 共享 `common.qwen3_code_predictor` | **修复前会**(踩 `has_separate_talker` 分支)→ #4519 |
+
+要点:
+
+1. **只有 Qwen3-Omni 触发了 bug。** Fish Speech 靠 `graph_safe=True` 被正当封装;Qwen3-TTS 既非 graph_safe 也无独立 talker,从不封装;唯独 Qwen3-Omni 有独立 talker 又没声明 graph_safe,被 `has_separate_talker` 误判。NPU 修复(只认 `talker_mtp_graph_safe`)因此只改变 Qwen3-Omni 的行为,另两个不受影响。
+2. **共享 code predictor 的范围比 talker_mtp 更广。** `common.qwen3_code_predictor`(含 `CodePredictorWrapper` / `CodePredictorAttention`)被 **Qwen3-TTS、Qwen3-Omni、MOSS-TTS** 三方复用;但 **MOSS-TTS 不定义 `talker_mtp`**(直接用 `CodePredictorBaseModel`,走不同路径),不在本名单内。
+3. **Fish Speech 用的是自带的 fast AR code predictor**(`fish_speech_fast_ar.py`),并做过 capture-safe 改造(commit `cb4d13a6`),所以敢声明 `talker_mtp_graph_safe=True`。
+
+## 四、我们面临的问题
 
 ### 现象
 
@@ -101,7 +117,7 @@ flowchart TD
 
 要点:**determine_available_memory 是纯启动期估算,不进 serving;但崩溃就发生在这一步,服务直接起不来。** 即便没有 PR 9865,这个被误封装的 talker_mtp 在真正的 `capture_model()` 里**照样会崩**——PR 9865 只是把崩溃从"晚"提前到了"早"。根因始终是:**非 graph-safe 的 talker_mtp 被 FULL 封装了。**
 
-## 四、修复:NPU 子类收窄图安全策略,且零性能损失
+## 五、修复:NPU 子类收窄图安全策略,且零性能损失
 
 崩溃是 NPU/PTA 专属(嵌套 replay 致命)且由 vllm-ascend PR 9865 触发,因此**不动共享的 GPU 基类**,而在 `OmniNPUModelRunner` 里 override `_init_talker_mtp`:在 NPU 上**只有模型显式声明 `talker_mtp_graph_safe=True` 才封装**。
 
@@ -130,7 +146,7 @@ def _init_talker_mtp(self) -> None:
 
 不封装后,talker_mtp 在 **profiling / capture_model / runtime** 三个阶段全程 eager、合法一致;`_capture_talker_mtp_graphs` 的 `isinstance(..., ACLGraphWrapper)` 守卫自然 no-op。
 
-## 五、一句话总结
+## 六、一句话总结
 
 > **talker_mtp** 是 Qwen3-Omni talker 解码循环里的残差码本预测器(code predictor),内含 `multinomial`/`NonZero` 这类不可录图的算子。**问题**是它被 `has_separate_talker` 分支误判为可录图、套上了 FULL 图 wrapper;PR 9865 新增的启动期显存估算把这个"不可录却被录"的矛盾**提前引爆**成嵌套 replay 崩溃。**修复**是让 NPU 只对显式声明 `talker_mtp_graph_safe` 的模型封装——零性能损失,因为真正的加速(CodePredictorAttention)来自 code_predictor 自己的内层 device graph。
 
