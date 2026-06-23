@@ -127,6 +127,7 @@ nav:
       - 以 Qwen3-Omni 拆解核心组件与请求流转: vllm-omni/components-request-flow.md
       - 全模态(图/音)与纯文本用例的路径区别: vllm-omni/multimodal-vs-text-path.md
       - platforms/npu 架构导读: vllm-omni/npu-platform-architecture.md
+      - 三处 worker 的职责与继承关系梳理: vllm-omni/worker-class-hierarchy.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
