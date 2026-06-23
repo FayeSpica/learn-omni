@@ -128,6 +128,7 @@ nav:
       - 全模态(图/音)与纯文本用例的路径区别: vllm-omni/multimodal-vs-text-path.md
       - platforms/npu 架构导读: vllm-omni/npu-platform-architecture.md
       - 三处 worker 的职责与继承关系梳理: vllm-omni/worker-class-hierarchy.md
+      - 在 VSCode 里远程调试 Ascend 容器内的 vLLM-Omni: vllm-omni/debug-ascend-remote.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
