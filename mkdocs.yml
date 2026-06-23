@@ -125,6 +125,7 @@ nav:
       - transformers 的 is_tracing 为什么在 NPU 上失灵: vllm-omni/transformers-is-tracing-npu.md
       - Omni 平台无关/相关解耦：现状与演进: vllm-omni/platform-decoupling.md
       - 以 Qwen3-Omni 拆解核心组件与请求流转: vllm-omni/components-request-flow.md
+      - 全模态(图/音)与纯文本用例的路径区别: vllm-omni/multimodal-vs-text-path.md
       - platforms/npu 架构导读: vllm-omni/npu-platform-architecture.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
