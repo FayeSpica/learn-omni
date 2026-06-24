@@ -5,6 +5,10 @@
 >
 > 本文从**崩点倒推到根因**，把每一环标清 GPU/NPU 是「同」还是「分叉」，结论是：
 > **真正的分叉只有一个——`omni_prefix_cache` 在 NPU 从未实例化**。
+>
+> !!! success "已验证"
+>     stage-0 thinker 设 `enable_prefix_caching: false` 后崩溃消失 —— 反证整条倒推成立：
+>     缺口由 KV 前缀缓存命中制造，NPU 缺 `omni_prefix_cache` 兜底，关掉前缀缓存即无缺口可补。
 
 ---
 
@@ -142,14 +146,14 @@ def initialize_metadata_builders(self, kv_cache_config, kernel_block_sizes):
 
 ## 6. 两条修法
 
-- **路线 1（绕开缺口，推荐先做）**：thinker `enable_prefix_caching: false`
+- **路线 1（绕开缺口）✅ 已验证修复**：thinker `enable_prefix_caching: false`
   ```yaml
   stages:
     - stage_id: 0
       enable_prefix_caching: false   # 每次整段 prefill，不依赖 omni cache 兜底
   ```
-  → 不命中前缀 → 不缩短 prefill → thinker 每次捕获全序列 274 → 根本不需要 omni_prefix_cache → 链路自洽，崩溃消失。
-  代价：共享前缀重算（TTFT↑、共享前缀场景吞吐↓）。**低风险、立刻解锁**，且能反证整条倒推。
+  → 不命中前缀 → 不缩短 prefill → thinker 每次捕获全序列 274 → 根本不需要 omni_prefix_cache → 链路自洽，**崩溃消失（实测确认）**。
+  代价：共享前缀重算（TTFT↑、共享前缀场景吞吐↓）。**低风险、立刻解锁**，且反证了整条倒推。
 
 - **路线 2（保前缀缓存性能）**：在 NPU 真正落地 `omni_prefix_cache`
   1. 先解决建 cache 的 **OOM**（缩小镜像/惰性分配/换 dtype，而非整 KV 全量镜像）；
