@@ -2,12 +2,33 @@
 
 记录 vLLM 在昇腾 NPU 上的适配层 `vllm-ascend`：Platform / Worker 适配、量化方案、算子与设备管理等平台相关的内容。
 
-## 目录
+## 知识脉络
 
-> 随着学习推进逐步补充。建议每个主题单独建一篇 `.md`，并在下方与 `mkdocs.yml` 的 `nav` 中登记。
+`vllm-ascend` 是 vLLM 的"第二类后端"——把一套为 CUDA 设计的引擎迁到昇腾 NPU。它的工作可以按**适配维度**拆成五条线，每条都是"上游有什么 → 昇腾怎么对应/重写"：
 
-- 暂无系统笔记，待补充。
-- 相关（vLLM 板块）：[图模式：eager / PIECEWISE / FULL](../vllm/cudagraph-modes.md) — 含昇腾 ACL Graph 的对应
+```mermaid
+flowchart TD
+  ROOT["vllm-ascend：把 vLLM 迁到昇腾 NPU"] --> PLAT["① Platform / 设备 / HCCL 通信"]
+  ROOT --> WK["② Worker / Runner 适配"]
+  ROOT --> GR["③ 图捕获 ACL Graph"]
+  ROOT --> QT["④ 量化 / 低精度"]
+  ROOT --> OP["⑤ 算子 aclnn / aclop"]
+  WK --> W1["三处 runner 继承梳理 ✅（vllm-omni）"]
+  GR --> G1["图模式概念篇 ✅（vLLM）"]
+  GR --> G2["runner 图捕获实现差异 ✅（vllm-omni）"]
+  QT --> Q1["量化支持速查 ✅"]
+  QT --> Q2["代次与低精度格式 ✅"]
+```
+
+**脉络说明**（不少昇腾主题是结合 omni 一起写的，已交叉链接）：
+
+- **① Platform/设备**——设备初始化、HCCL 通信、内存管理。推进方向。
+- **② Worker/Runner 适配**——`NPUWorker` 直接继承 `WorkerBase`、`NPUModelRunner` 复用 `GPUModelRunner`：见 [三处 worker 的职责与继承关系梳理](../vllm-omni/worker-class-hierarchy.md) ✅。
+- **③ 图捕获 ACL Graph**——概念见 [图模式：eager / PIECEWISE / FULL](../vllm/cudagraph-modes.md) ✅；runner 层实现与 GPU 的差异见 [图模式在 runner 里的实现](../vllm-omni/npu-gpu-graph-in-runner.md) ✅。
+- **④ 量化/低精度**——[量化特性支持速查](snippets/ascend-quantization.md) ✅、[代次与原生低精度格式](snippets/ascend-generations-low-precision.md) ✅。
+- **⑤ 算子**——aclnn/aclop 与可图性，推进方向（相关坑见 [talker_mtp 图安全](../vllm-omni/talker-mtp-graph-safety.md)）。
+
+> ✅ = 已有笔记；其余为推进方向。
 
 另见 [碎片知识](snippets/index.md)：
 - [昇腾(vllm-ascend)量化特性支持速查](snippets/ascend-quantization.md) — W8A8 / W4A8 / W4A4 / MXFP8 / KV C8 支持矩阵
