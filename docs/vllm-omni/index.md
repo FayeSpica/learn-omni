@@ -1,4 +1,4 @@
-# vllm-omni
+# vLLM-Omni
 
 记录在 vLLM 之上构建的任意模态服务框架 `vllm-omni`：多引擎/多阶段编排、平台解耦、核心组件与请求流转，以及 Qwen3-Omni 等具体模型在 NPU 上的落地。
 

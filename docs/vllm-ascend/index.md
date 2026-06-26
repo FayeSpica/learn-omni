@@ -1,4 +1,4 @@
-# vllm-ascend（昇腾）
+# vLLM-Ascend（昇腾）
 
 记录 vLLM 在昇腾 NPU 上的适配层 `vllm-ascend`：Platform / Worker 适配、量化方案、算子与设备管理等平台相关的内容。
 
