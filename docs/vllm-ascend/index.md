@@ -13,11 +13,13 @@ flowchart TD
   ROOT --> GR["③ 图捕获 ACL Graph"]
   ROOT --> QT["④ 量化 / 低精度"]
   ROOT --> OP["⑤ 算子 aclnn / aclop"]
+  ROOT --> MOE["⑥ MoE / 专家并行 EPLB"]
   WK --> W1["三处 runner 继承梳理 ✅（vllm-omni）"]
   GR --> G1["图模式概念篇 ✅（vLLM）"]
   GR --> G2["runner 图捕获实现差异 ✅（vllm-omni）"]
   QT --> Q1["量化支持速查 ✅"]
   QT --> Q2["代次与低精度格式 ✅"]
+  MOE --> M1["EPLB 工作原理与 omni 继承透传 ✅（vllm-omni）"]
 ```
 
 **脉络说明**（不少昇腾主题是结合 omni 一起写的，已交叉链接）：
@@ -27,6 +29,7 @@ flowchart TD
 - **③ 图捕获 ACL Graph**——概念见 [图模式：eager / PIECEWISE / FULL](../vllm/cudagraph-modes.md) ✅；runner 层实现与 GPU 的差异见 [图模式在 runner 里的实现](../vllm-omni/npu-gpu-graph-in-runner.md) ✅。
 - **④ 量化/低精度**——[量化特性支持速查](snippets/ascend-quantization.md) ✅、[代次与原生低精度格式](snippets/ascend-generations-low-precision.md) ✅。
 - **⑤ 算子**——aclnn/aclop 与可图性，推进方向（相关坑见 [talker_mtp 图安全](../vllm-omni/talker-mtp-graph-safety.md)）。
+- **⑥ MoE/专家并行**——EPLB 负载均衡:vllm 主干机制 + 昇腾异步子进程改造 + omni 的继承透传，见 [EPLB 工作原理与 omni 的继承透传](../vllm-omni/snippets/eplb-inheritance.md) ✅。
 
 > ✅ = 已有笔记；其余为推进方向。
 
