@@ -131,6 +131,7 @@ nav:
       - 三处 worker 的职责与继承关系梳理: vllm-omni/worker-class-hierarchy.md
       - 图模式在 runner 里的实现：NPU 与 GPU 差异: vllm-omni/npu-gpu-graph-in-runner.md
       - 在 VSCode 里远程调试 Ascend 容器内的 vLLM-Omni: vllm-omni/debug-ascend-remote.md
+      - 断点点位地图：启动期 + 请求期（GPU/NPU × vllm/omni/ascend）: vllm-omni/breakpoint-map.md
       - 案例倒推：NPU 上 talker 因前缀缓存缺兜底而崩(6 vs 9): vllm-omni/npu-prefix-cache-missing.md
       - Diffusion 注意力后端全貌（以 ring_pytorch_attn 为例）: vllm-omni/diffusion-attention-backend.md
       - 从 curl 到返回：请求完整生命周期（GPU/NPU × vllm/omni/ascend）: vllm-omni/request-lifecycle-end-to-end.md
