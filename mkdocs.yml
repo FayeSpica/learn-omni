@@ -133,6 +133,7 @@ nav:
       - 在 VSCode 里远程调试 Ascend 容器内的 vLLM-Omni: vllm-omni/debug-ascend-remote.md
       - 案例倒推：NPU 上 talker 因前缀缓存缺兜底而崩(6 vs 9): vllm-omni/npu-prefix-cache-missing.md
       - Diffusion 注意力后端全貌（以 ring_pytorch_attn 为例）: vllm-omni/diffusion-attention-backend.md
+      - 从 curl 到返回：请求完整生命周期（GPU/NPU × vllm/omni/ascend）: vllm-omni/request-lifecycle-end-to-end.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
