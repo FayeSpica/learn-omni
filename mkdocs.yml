@@ -149,6 +149,11 @@ nav:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
           - EPLB 工作原理与 omni 的继承透传: vllm-omni/snippets/eplb-inheritance.md
+  - NPU 适配:
+      - npu-adaptation/index.md
+      - "发布看板（v0.23.0 · 镜像 #4610）": npu-adaptation/release-board.md
+      - 对齐漂移总索引: npu-adaptation/alignment-drift.md
+      - 适配待办（接社区 issue）: npu-adaptation/task-list.md
 
 not_in_nav: |
   /vllm-omni/runner-compare/_matrix.generated.md
