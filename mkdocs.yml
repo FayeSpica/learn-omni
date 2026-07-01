@@ -135,6 +135,11 @@ nav:
       - 案例倒推：NPU 上 talker 因前缀缓存缺兜底而崩(6 vs 9): vllm-omni/npu-prefix-cache-missing.md
       - Diffusion 注意力后端全貌（以 ring_pytorch_attn 为例）: vllm-omni/diffusion-attention-backend.md
       - 从 curl 到返回：请求完整生命周期（GPU/NPU × vllm/omni/ascend）: vllm-omni/request-lifecycle-end-to-end.md
+      - Orchestrator：多 stage 编排核心: vllm-omni/engine-orchestrator.md
+      - 跨 stage 数据面：连接器与 KV 传输（骨架）: vllm-omni/distributed-connectors-kv.md
+      - 量化全景：factory 到各 config（骨架）: vllm-omni/quantization-overview.md
+      - Diffusion pipeline 内部：去噪到 VAE（骨架）: vllm-omni/diffusion-pipeline-internals.md
+      - 语音/TTS 服务链路：接口到 Code2Wav（骨架）: vllm-omni/tts-serving-path.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
