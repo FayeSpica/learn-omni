@@ -1,0 +1,121 @@
+<!-- 本文件由 tools/runner_matrix.py 生成,勿手改;语义标注写在 index.md -->
+
+!!! info "对齐基线(自动读取 git HEAD)"
+    - `vllm` @ `6c427dd40`
+    - `vllm-omni` @ `724f5d13`
+    - `vllm-ascend` @ `12c8da7a`
+
+> 图例:🔧 本类直接 override · ⬆️ 继承自集合内父类 · · 继承链上无人定义。仅列出**存在 override 分叉**的方法;另有 **73** 个方法为纯继承,已折叠。
+
+| 方法 | vllm GPU | omni GPU | ascend NPU | omni NPU | omni NPU·AR | omni NPU·Gen |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| `_adjust_kv_layout` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_align_memory` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_align_up` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_all_gather_hidden_states` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_all_gather_hidden_states_and_aux` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_all_gather_hidden_states_list` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_allocate_int8_cache_tensor` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_allocate_kv_cache_tensors` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_allocate_sparse_c8_indexer_tensors` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_bind_routed_experts_capturer` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_bookkeeping_sync` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_build_attention_metadata` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_build_attn_state` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_build_model_kwargs_extra` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_build_model_sampler_output_token_ids` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_build_multimodal_outputs` | · | · | · | · | 🔧 | · |
+| `_calc_mrope_positions` | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ | ⬆️ |
+| `_calc_spec_decode_metadata` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_capture_talker_mtp_graphs` | · | · | · | · | 🔧 | · |
+| `_check_and_update_cudagraph_mode` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_collect_additional_information_for_prefill` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_compute_request_token_spans` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_copy_draft_token_ids_to_cpu` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_copy_valid_sampled_token_count` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_decode_and_store_request_payloads` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_determine_batch_execution_and_padding` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_dummy_run` | 🔧 | 🔧 | 🔧 | 🔧 | ⬆️ | 🔧 |
+| `_dummy_sampler_run` | 🔧 | 🔧 | 🔧 | ⬆️ | ⬆️ | 🔧 |
+| `_eagle3_uses_aux_hidden_state` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_finalize_dump_data` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_fixup_precomputed_mrope_decode_positions` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_gather_mm_embeddings` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_gather_runtime_additional_information` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_get_attention_kv_cache_dims` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_get_drafter` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_get_layer_kv_cache_specs` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_init_device_properties` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_init_kv_zero_meta` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_init_mrope_positions` | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ | ⬆️ |
+| `_init_talker_mtp` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_is_sparse_audio_marker` | · | · | · | · | 🔧 | · |
+| `_make_buffer` | 🔧 | ⬆️ | ⬆️ | ⬆️ | 🔧 | ⬆️ |
+| `_maybe_attach_attention_metadata_extensions` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_maybe_attach_mimo_audio_req_infos` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_maybe_enable_output_token_ids_for_model_sampler` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_maybe_get_combined_prefix_cache_tensors` | · | · | · | · | 🔧 | · |
+| `_maybe_run_batch_preprocess` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_maybe_update_prefix_cache` | · | · | · | · | 🔧 | · |
+| `_merge_additional_information_update` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_model_forward` | 🔧 | 🔧 | 🔧 | 🔧 | ⬆️ | ⬆️ |
+| `_model_needs_full_prefix_hidden_states` | · | · | · | · | 🔧 | · |
+| `_omni_extract_routed_experts` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_omni_routed_experts_d2h` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_pad_for_sequence_parallelism` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_pad_query_start_loc_for_fia` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_prepare_inputs` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_prepare_multimodal_fields` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_preprocess` | 🔧 | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_prewarm_attention_capture_workspaces` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_process_additional_information_updates` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_rebuild_input_ids_with_corrected_positions` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_request_final_stage_id` | · | · | · | · | 🔧 | · |
+| `_request_needs_downstream_stage_payload` | · | · | · | · | 🔧 | · |
+| `_reshape_kv_cache_tensors` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_resolve_global_request_id` | · | · | · | · | 🔧 | · |
+| `_resolve_pooler_payload_req_ids` | · | · | · | · | 🔧 | · |
+| `_resolve_prompt_embeds_cpu` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_resolve_req_hidden_states` | · | · | · | · | 🔧 | · |
+| `_run_generation_model` | · | · | · | · | · | 🔧 |
+| `_sample` | 🔧 | ⬆️ | 🔧 | ⬆️ | 🔧 | ⬆️ |
+| `_sampling_metadata_for_model_sampler` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_sanitize_placeholder_input_ids_for_forward` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_set_up_drafter` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_should_build_dummy_attn_metadata` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_sparse_mm_req_ids` | · | · | · | · | 🔧 | · |
+| `_start_dump_data` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_store_value` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_sync_device` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_sync_local_stage_payloads` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_sync_metadata_across_dp` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_talker_mtp_forward` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_to_list` | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ | ⬆️ |
+| `_update_additional_information` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_update_full_graph_params_if_needed` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_update_intermediate_buffer` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_update_request_states` | · | · | · | · | · | 🔧 |
+| `_update_states` | 🔧 | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `_update_streaming_input_additional_info` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `_use_aclgraph` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `calculate_reorder_batch_threshold` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `capture_model` | 🔧 | ⬆️ | 🔧 | ⬆️ | 🔧 | ⬆️ |
+| `eplb_warmup` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `execute_model` | 🔧 | ⬆️ | 🔧 | ⬆️ | 🔧 | 🔧 |
+| `extract_multimodal_outputs` | · | 🔧 | · | ⬆️ | ⬆️ | ⬆️ |
+| `get_kv_cache_spec` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `get_model` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `initialize_attn_backend` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `initialize_kv_cache` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `initialize_kv_cache_tensors` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `initialize_metadata_builders` | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ | ⬆️ |
+| `load_model` | 🔧 | 🔧 | 🔧 | 🔧 | ⬆️ | ⬆️ |
+| `may_reinitialize_input_batch` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `profile_cudagraph_memory` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `profile_run` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | 🔧 |
+| `propose_draft_token_ids` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `sample_tokens` | 🔧 | ⬆️ | 🔧 | ⬆️ | 🔧 | 🔧 |
+| `sync_and_gather_intermediate_tensors` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `sync_and_slice_intermediate_tensors` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `update_eplb_heat_collection_status` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |
+| `use_cp` | · | · | 🔧 | ⬆️ | ⬆️ | ⬆️ |

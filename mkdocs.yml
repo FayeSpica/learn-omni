@@ -140,7 +140,15 @@ nav:
       - 量化全景：factory 到各 config（骨架）: vllm-omni/quantization-overview.md
       - Diffusion pipeline 内部：去噪到 VAE（骨架）: vllm-omni/diffusion-pipeline-internals.md
       - 语音/TTS 服务链路：接口到 Code2Wav（骨架）: vllm-omni/tts-serving-path.md
+      - model_runner 四方对比（vllm/ascend/omni · GPU/NPU）:
+          - vllm-omni/runner-compare/index.md
+          - "L2 · _prepare_inputs（MRO 分叉）": vllm-omni/runner-compare/prepare-inputs.md
+          - "L2 · _dummy_run / 图捕获": vllm-omni/runner-compare/graph-capture.md
+          - 漂移日志（release 对齐）: vllm-omni/runner-compare/drift-log.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
           - EPLB 工作原理与 omni 的继承透传: vllm-omni/snippets/eplb-inheritance.md
+
+not_in_nav: |
+  /vllm-omni/runner-compare/_matrix.generated.md
