@@ -11,7 +11,7 @@ Markdown 覆盖矩阵:每个方法在每个 runner 里是「直接 override」�
 
 用法:
     OMNI_SRC=~/git/vllm_omni python3 tools/runner_matrix.py            # 打印到 stdout
-    OMNI_SRC=~/git/vllm_omni python3 tools/runner_matrix.py > docs/vllm-omni/runner-compare/_matrix.generated.md
+    OMNI_SRC=~/git/vllm_omni python3 tools/runner_matrix.py > docs/npu-adaptation/runner-compare/_matrix.generated.md
 
 基线 SHA 会自动从各 repo 的 git HEAD 读取,写进输出头部。
 """

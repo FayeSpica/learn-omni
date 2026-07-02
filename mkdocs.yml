@@ -93,7 +93,16 @@ nav:
   - 首页: index.md
   - LLM 基础:
       - llm-basics/index.md
-      - 每生成一个 Token 的 KV Cache 显存: llm-basics/kv-cache-per-token.md
+      - 1 · Transformer 架构:
+          - Self-Attention 机制: llm-basics/self-attention.md
+      - 2 · 现代变体:
+          - 注意力变体 GQA/MQA/MLA: llm-basics/attention-variants.md
+          - MoE 基础: llm-basics/moe-basics.md
+      - 4 · 推理原理:
+          - 两阶段与 Roofline: llm-basics/prefill-decode-roofline.md
+          - 每生成一个 Token 的 KV Cache 显存: llm-basics/kv-cache-per-token.md
+      - 5 · 效率与部署:
+          - 显存账本与量化: llm-basics/memory-and-quantization.md
       - 碎片知识:
           - llm-basics/snippets/index.md
   - 生成模型基础:
