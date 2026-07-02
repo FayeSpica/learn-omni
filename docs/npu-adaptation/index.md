@@ -21,7 +21,7 @@ flowchart LR
   ROOT --> AD["对齐漂移总索引<br/>alignment-drift"]
   ROOT --> TL["适配待办<br/>task-list"]
   RB -.镜像.-> I4610["issue #4610"]
-  AD -.收口.-> RC["vLLM-Omni / runner-compare"]
+  AD -.收口.-> RC["NPU 适配 / runner-compare"]
   AD -.收口.-> DL["runner-compare / drift-log"]
   TL -.接.-> ISS["社区 open issues"]
 ```
@@ -38,7 +38,7 @@ flowchart LR
 | `vllm-ascend` | `12c8da7a` | 对齐目标(NPUModelRunner) |
 | `vllm-omni` | `724f5d13` | 本仓(v0.23 线) |
 
-> 更新基线时,同步改这里、[发布看板](release-board.md) 与 [漂移索引](alignment-drift.md) 三处头部,并重跑 [`tools/runner_matrix.py`](../vllm-omni/runner-compare/index.md#regen)。
+> 更新基线时,同步改这里、[发布看板](release-board.md) 与 [漂移索引](alignment-drift.md) 三处头部,并重跑 [`tools/runner_matrix.py`](runner-compare/index.md#regen)。
 
 ## 现有深挖笔记(不搬,只索引)
 
@@ -46,7 +46,7 @@ flowchart LR
 
 **① runner 对齐(核心)**
 
-- [model_runner 四方对比模块](../vllm-omni/runner-compare/index.md) — 覆盖矩阵 + L2 逐方法差异 + 漂移日志
+- [model_runner 四方对比模块](runner-compare/index.md) — 覆盖矩阵 + L2 逐方法差异 + 漂移日志
 - [npu_model_runner 上游适配困境与解耦](../vllm-omni/snippets/npu-runner-decoupling.md)
 - [三处 worker 的职责与继承关系](../vllm-omni/worker-class-hierarchy.md)
 

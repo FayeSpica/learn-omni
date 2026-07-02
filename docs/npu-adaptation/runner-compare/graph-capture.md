@@ -13,7 +13,7 @@ tags:
 # L2 下钻:`_dummy_run` / 图捕获 —— 四方全 override 的雷区
 
 > 覆盖矩阵:`🔧 vllm GPU · 🔧 omni GPU · 🔧 ascend NPU · 🔧 omni NPU`(唯一四方全部直接 override 的核心方法,且**无一调用 `super()`**,四份都是完整重写)。
-> 相关既有笔记:[runner 图捕获实现差异(NPU vs GPU)](../npu-gpu-graph-in-runner.md) · [嵌套图捕获 #4519](../nested-graph-capture.md) · [is_tracing 在 NPU 失灵](../transformers-is-tracing-npu.md) · [talker_mtp 图安全](../talker-mtp-graph-safety.md)
+> 相关既有笔记:[runner 图捕获实现差异(NPU vs GPU)](../../vllm-omni/npu-gpu-graph-in-runner.md) · [嵌套图捕获 #4519](../../vllm-omni/nested-graph-capture.md) · [is_tracing 在 NPU 失灵](../../vllm-omni/transformers-is-tracing-npu.md) · [talker_mtp 图安全](../../vllm-omni/talker-mtp-graph-safety.md)
 >
 > 源码位置(基线见 [index](index.md#regen) 头部 SHA):
 > vllm `gpu_model_runner.py:5670` · omni GPU `gpu_model_runner.py:854` · vllm-ascend `model_runner_v1.py:3321` · omni NPU `npu_model_runner.py:51`

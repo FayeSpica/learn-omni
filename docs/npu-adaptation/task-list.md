@@ -13,9 +13,9 @@ tags:
 
 ## 优先:release 阻塞项(源自 [#4610](https://github.com/vllm-project/vllm-omni/issues/4610))
 
-- ⬜ **升级 `NPUModelRunner` 对齐 vLLM-Ascend** —— 本版长杆,无 PR。子任务已在 [runner-compare](../vllm-omni/runner-compare/index.md) 拆好:
-    - `_dummy_run` 补齐 3 个 ascend context 参数 + 核实 SP>1 下 all-gather 捕获([详情](../vllm-omni/runner-compare/graph-capture.md))
-    - `_prepare_inputs` 4 元组契约守护([详情](../vllm-omni/runner-compare/prepare-inputs.md))
+- ⬜ **升级 `NPUModelRunner` 对齐 vLLM-Ascend** —— 本版长杆,无 PR。子任务已在 [runner-compare](runner-compare/index.md) 拆好:
+    - `_dummy_run` 补齐 3 个 ascend context 参数 + 核实 SP>1 下 all-gather 捕获([详情](runner-compare/graph-capture.md))
+    - `_prepare_inputs` 4 元组契约守护([详情](runner-compare/prepare-inputs.md))
 
 ## Tier 0 · 小而正中方向(未认领,可抢)
 

@@ -140,11 +140,6 @@ nav:
       - 量化全景：factory 到各 config（骨架）: vllm-omni/quantization-overview.md
       - Diffusion pipeline 内部：去噪到 VAE（骨架）: vllm-omni/diffusion-pipeline-internals.md
       - 语音/TTS 服务链路：接口到 Code2Wav（骨架）: vllm-omni/tts-serving-path.md
-      - model_runner 四方对比（vllm/ascend/omni · GPU/NPU）:
-          - vllm-omni/runner-compare/index.md
-          - "L2 · _prepare_inputs（MRO 分叉）": vllm-omni/runner-compare/prepare-inputs.md
-          - "L2 · _dummy_run / 图捕获": vllm-omni/runner-compare/graph-capture.md
-          - 漂移日志（release 对齐）: vllm-omni/runner-compare/drift-log.md
       - 碎片知识:
           - vllm-omni/snippets/index.md
           - npu_model_runner 上游适配困境与解耦: vllm-omni/snippets/npu-runner-decoupling.md
@@ -154,6 +149,11 @@ nav:
       - "发布看板（v0.23.0 · 镜像 #4610）": npu-adaptation/release-board.md
       - 对齐漂移总索引: npu-adaptation/alignment-drift.md
       - 适配待办（接社区 issue）: npu-adaptation/task-list.md
+      - model_runner 四方对比（vllm/ascend/omni · GPU/NPU）:
+          - npu-adaptation/runner-compare/index.md
+          - "L2 · _prepare_inputs（MRO 分叉）": npu-adaptation/runner-compare/prepare-inputs.md
+          - "L2 · _dummy_run / 图捕获": npu-adaptation/runner-compare/graph-capture.md
+          - 漂移日志（release 对齐）: npu-adaptation/runner-compare/drift-log.md
 
 not_in_nav: |
-  /vllm-omni/runner-compare/_matrix.generated.md
+  /npu-adaptation/runner-compare/_matrix.generated.md

@@ -39,7 +39,7 @@ cd ~/git/vllm_omni
 
 # 1) 重生成结构矩阵
 OMNI_SRC=$PWD python3 ~/git/FayeSpica/learn-omni/tools/runner_matrix.py \
-  > ~/git/FayeSpica/learn-omni/docs/vllm-omni/runner-compare/_matrix.generated.md
+  > ~/git/FayeSpica/learn-omni/docs/npu-adaptation/runner-compare/_matrix.generated.md
 
 # 2) ascend NPU runner 自上次基线以来的提交(要跟的 delta 源)
 git -C vllm-ascend log --oneline --since="6 weeks ago" -- vllm_ascend/worker/model_runner_v1.py

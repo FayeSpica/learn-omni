@@ -18,7 +18,7 @@ tags:
 >
 > **抗腐烂设计**:矩阵结构(override/inherit)由 [`tools/runner_matrix.py`](#regen) 从源码 AST 自动抽取,永不腐烂;语义标注(⚠️ 分叉、❌ 缺兜底)是人工在本页维护。行号一律不写,只锚方法名。
 >
-> 相关阅读:[npu_model_runner 上游适配困境与解耦](../snippets/npu-runner-decoupling.md) · [三处 worker 的职责与继承关系](../worker-class-hierarchy.md) · [runner 图捕获实现差异](../npu-gpu-graph-in-runner.md)
+> 相关阅读:[npu_model_runner 上游适配困境与解耦](../../vllm-omni/snippets/npu-runner-decoupling.md) · [三处 worker 的职责与继承关系](../../vllm-omni/worker-class-hierarchy.md) · [runner 图捕获实现差异](../../vllm-omni/npu-gpu-graph-in-runner.md)
 
 ## 一、继承拓扑:一个真实的菱形
 
@@ -58,8 +58,8 @@ flowchart TD
 | `_build_attention_metadata` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ | attention backend 元数据,后端差异集中点 |
 | `_calc_mrope_positions` | 🔧 | 🔧 | ⬆️ | ⬆️ | ⬆️ | ⬆️ | mrope;omni GPU 改了,**ascend 未改** → NPU 上是否需同步? |
 | `_gather_mm_embeddings` | 🔧 | ⬆️ | 🔧 | ⬆️ | ⬆️ | ⬆️ | 多模态 embedding 收集 |
-| `_capture_talker_mtp_graphs` | · | · | · | · | 🔧 | · | ➕ **仅 AR 阶段**;talker_mtp 图安全,见[对应笔记](../talker-mtp-graph-safety.md) |
-| `_maybe_update_prefix_cache` | · | · | · | · | 🔧 | · | ➕ 仅 AR;❌ 前缀缓存缺兜底崩溃的相关点,见[案例](../npu-prefix-cache-missing.md) |
+| `_capture_talker_mtp_graphs` | · | · | · | · | 🔧 | · | ➕ **仅 AR 阶段**;talker_mtp 图安全,见[对应笔记](../../vllm-omni/talker-mtp-graph-safety.md) |
+| `_maybe_update_prefix_cache` | · | · | · | · | 🔧 | · | ➕ 仅 AR;❌ 前缀缓存缺兜底崩溃的相关点,见[案例](../../vllm-omni/npu-prefix-cache-missing.md) |
 | `_build_multimodal_outputs` | · | · | · | · | 🔧 | · | ➕ 仅 AR,多模态输出装配 |
 
 > 图例:🔧 本类直接 override · ⬆️ 继承自集合内父类 · `·` 继承链上无人定义 · ⚠️ 需人工核对的分叉 · ❌ 缺失/兜底缺口 · ➕ omni 阶段专属新增
@@ -68,7 +68,7 @@ flowchart TD
 
 ??? note "展开全量矩阵(由 tools/runner_matrix.py 自动生成)"
 
-    --8<-- "docs/vllm-omni/runner-compare/_matrix.generated.md"
+    --8<-- "docs/npu-adaptation/runner-compare/_matrix.generated.md"
 
 ## 四、漂移日志
 
@@ -81,7 +81,7 @@ flowchart TD
 ```bash
 # 在 learn-omni 根目录
 OMNI_SRC=~/git/vllm_omni python3 tools/runner_matrix.py \
-  > docs/vllm-omni/runner-compare/_matrix.generated.md
+  > docs/npu-adaptation/runner-compare/_matrix.generated.md
 ```
 
 生成器只负责**结构**(哪些方法在哪一层 override);**语义**(为什么、有没有丢 NPU 逻辑)永远是人工在 spine 表和 L2 页面里维护——这正是这份笔记相对 `git diff` 的增量价值。

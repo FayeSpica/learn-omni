@@ -20,10 +20,10 @@ tags:
 | ✅ | 更新 v0.23.0 文档 & Dockerfile | [#4602](https://github.com/vllm-project/vllm-omni/pull/4602) | 已合并 |
 
 !!! danger "开放项即 release 阻塞项"
-    "升级 `NPUModelRunner` 对齐 vLLM-Ascend" 没有 PR。具体差异已在 [runner-compare](../vllm-omni/runner-compare/index.md) 逐方法拆过,可直接转成子任务:
+    "升级 `NPUModelRunner` 对齐 vLLM-Ascend" 没有 PR。具体差异已在 [runner-compare](runner-compare/index.md) 逐方法拆过,可直接转成子任务:
 
-    - `_prepare_inputs`:ascend 返回 **4 元组**(+PCP total、+压缩 KV list),保持 OmniGPU 不 override → [详情](../vllm-omni/runner-compare/prepare-inputs.md)
-    - `_dummy_run`:omni NPU 手抄版**缺 3 个 ascend context 参数** + 直调 `self.model()` 跳过 SP all-gather,**待 SP>1 核实** → [详情](../vllm-omni/runner-compare/graph-capture.md)
+    - `_prepare_inputs`:ascend 返回 **4 元组**(+PCP total、+压缩 KV list),保持 OmniGPU 不 override → [详情](runner-compare/prepare-inputs.md)
+    - `_dummy_run`:omni NPU 手抄版**缺 3 个 ascend context 参数** + 直调 `self.model()` 跳过 SP all-gather,**待 SP>1 核实** → [详情](runner-compare/graph-capture.md)
 
 ## 二、重点模型验证(基于 [vllm-ascend#10278](https://github.com/vllm-project/vllm-ascend/pull/10278))
 
