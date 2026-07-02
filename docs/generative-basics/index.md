@@ -34,6 +34,7 @@ flowchart TD
 
 - [DiT 是什么，核心流程](dit.md) — Diffusion Transformer 的定义、三大构件、推理/训练流程、与 U-Net/LLM 的差异
 - [ViT 是什么，核心流程](vit.md) — Vision Transformer：patchify 流程、在 VLM 里当视觉编码器、与 DiT 的异同
+- [多模态在 Transformer 上有哪些变化](multimodal-vs-transformer.md) — 收口页：编码器/连接器、占位缝合、M-RoPE、融合范式、生成端 DiT/codec、分阶段训练
 
 待补充方向：
 
