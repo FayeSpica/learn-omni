@@ -40,9 +40,9 @@ flowchart TD
 
 > 目标:能徒手画出一个 decoder block,并说清每个组件为什么存在。
 
-- 🚧 Tokenizer 与 Embedding:文本 → token id → 向量
+- ✅ **[深入理解:PyTorch 手写 Transformer / RMSNorm](handwritten-transformer.md)** —— 从零手写 RMSNorm/RoPE/因果注意力(GQA)/SwiGLU,**可运行已验证**;本节各组件的动手总览
 - 🏗 **[Self-Attention 机制](self-attention.md)**:QKV、缩放点积、为什么要除 √d、多头的意义
-- 🚧 位置编码:绝对 / 相对 / **RoPE** / ALiBi,以及长度外推
+- 🚧 Tokenizer 与 Embedding:文本 → token id → 向量;位置编码 RoPE/ALiBi 与长度外推(RoPE 实现见手写篇)
 - 🚧 FFN / MLP 与激活:GeLU、**SwiGLU**
 - 🚧 归一化:LayerNorm vs **RMSNorm**、Pre-LN vs Post-LN
 - 🚧 残差连接、堆叠成 block、因果掩码与自回归生成

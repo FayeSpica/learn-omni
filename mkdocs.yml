@@ -94,6 +94,7 @@ nav:
   - LLM 基础:
       - llm-basics/index.md
       - 1 · Transformer 架构:
+          - 手写 Transformer / RMSNorm（可运行）: llm-basics/handwritten-transformer.md
           - Self-Attention 机制: llm-basics/self-attention.md
       - 2 · 现代变体:
           - 注意力变体 GQA/MQA/MLA: llm-basics/attention-variants.md
