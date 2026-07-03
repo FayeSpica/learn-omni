@@ -15,7 +15,7 @@ flowchart TD
   UND --> U2["音频编码器 audio tower"]
   GEN --> G1["DiT：扩散骨干 ✅"]
   GEN --> G2["VAE：latent 空间，为什么在 latent 做扩散"]
-  GEN --> G3["采样器：DDPM/DDIM/DPM-Solver/Euler"]
+  GEN --> G3["采样器：DDPM/DDIM/DPM-Solver/Euler ✅"]
   GEN --> G4["Flow Matching / CFG 引导"]
   PIPE --> P1["Thinker/Talker/Vocoder/Code2Wav → 见 vllm-omni"]
 ```
@@ -23,7 +23,7 @@ flowchart TD
 **建议阅读顺序**：
 
 1. **理解支**——先看 [ViT 是什么，核心流程](vit.md) ✅：patchify、在 VLM 里当视觉编码器，这是多模态输入侧的地基。
-2. **生成支**——[DiT 是什么，核心流程](dit.md) ✅ 是扩散骨干；往下补 VAE（latent 空间）→ 采样器 → Flow Matching / CFG，构成一条完整的"造内容"链路。
+2. **生成支**——[DiT 是什么，核心流程](dit.md) ✅ 是扩散骨干；[采样器：从 DDPM 到 Flow Matching](samplers.md) ✅ 讲去噪循环的步进规则（含 UniPC/Euler 取舍）；往下补 VAE（latent 空间）→ CFG，构成一条完整的"造内容"链路。
 3. **管线**——把理解与生成拼成端到端的多阶段流水线（Thinker/Talker/Code2Wav），落地实例见 [vllm-omni 板块](../vllm-omni/index.md)。
 
 > ✅ = 已有笔记；其余为推进方向。视觉/音频编码器如何接进推理引擎，参见 [全模态与纯文本路径区别](../vllm-omni/multimodal-vs-text-path.md)。
@@ -34,13 +34,12 @@ flowchart TD
 
 - [DiT 是什么，核心流程](dit.md) — Diffusion Transformer 的定义、三大构件、推理/训练流程、与 U-Net/LLM 的差异
 - [ViT 是什么，核心流程](vit.md) — Vision Transformer：patchify 流程、在 VLM 里当视觉编码器、与 DiT 的异同
+- [采样器：从 DDPM 到 Flow Matching](samplers.md) — 去噪循环的步进规则；DDPM/DDIM/DPM-Solver/UniPC/Euler 演化线、为什么少步蒸馏必须用 Euler、flow_shift
 - [多模态在 Transformer 上有哪些变化](multimodal-vs-transformer.md) — 收口页：编码器/连接器、占位缝合、M-RoPE、融合范式、生成端 DiT/codec、分阶段训练
 
 待补充方向：
 
 - VAE：latent 压缩与重建，为什么扩散要在 latent 空间做
-- 扩散采样器：DDPM / DDIM / DPM-Solver / Euler 的取舍
-- Flow Matching / Rectified Flow：与传统扩散的关系
 - Classifier-Free Guidance（CFG）原理与算力代价
 - 多阶段生成管线：Thinker / Talker / Vocoder / Code2Wav 的分工
 
