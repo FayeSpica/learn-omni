@@ -11,6 +11,8 @@ tags:
 # 两阶段与 Roofline:prefill 算力受限 vs decode 访存受限(骨架)
 
 > 🏗 学习骨架。所属 [LLM 基础](index.md) § 4 · 推理原理。**这是连接「理解」与「性能」的枢纽** —— 几乎所有推理优化的方向都由它决定。
+>
+> 长上下文下这两阶段各自可再切并行:prefill → **PCP**、decode → **DCP**,见 [上下文并行 CP:PCP 与 DCP](../vllm/context-parallel-pcp-dcp.md)。
 
 ## 学习目标
 

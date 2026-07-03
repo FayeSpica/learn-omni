@@ -110,14 +110,17 @@ nav:
       - generative-basics/index.md
       - DiT 是什么，核心流程: generative-basics/dit.md
       - ViT 是什么，核心流程: generative-basics/vit.md
+      - 采样器：从 DDPM 到 Flow Matching: generative-basics/samplers.md
       - 多模态在 Transformer 上有哪些变化: generative-basics/multimodal-vs-transformer.md
       - 碎片知识:
           - generative-basics/snippets/index.md
+          - 扩散加速的两根轴：量化 vs 蒸馏: generative-basics/snippets/diffusion-accel-axes.md
   - vLLM:
       - vllm/index.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: vllm/vllm-ir-and-customop.md
       - 图模式：eager / PIECEWISE / FULL: vllm/cudagraph-modes.md
       - EP/DP/TP/SP 区别：从 FusedMoE 讲起: vllm/ep-dp-tp-sp-fused-moe.md
+      - 上下文并行 CP：PCP 与 DCP（长序列/长 KV）: vllm/context-parallel-pcp-dcp.md
       - DeepSeek V4 Flash：从原理到 vLLM 实现: vllm/deepseek-v4-flash.md
       - 碎片知识:
           - vllm/snippets/index.md
@@ -146,6 +149,7 @@ nav:
       - 断点点位地图：启动期 + 请求期（GPU/NPU × vllm/omni/ascend）: vllm-omni/breakpoint-map.md
       - 案例倒推：NPU 上 talker 因前缀缓存缺兜底而崩(6 vs 9): vllm-omni/npu-prefix-cache-missing.md
       - Diffusion 注意力后端全貌（以 ring_pytorch_attn 为例）: vllm-omni/diffusion-attention-backend.md
+      - BAGEL-7B-MoT 模型解剖（统一理解+生成）: vllm-omni/bagel-model-anatomy.md
       - 从 curl 到返回：请求完整生命周期（GPU/NPU × vllm/omni/ascend）: vllm-omni/request-lifecycle-end-to-end.md
       - Orchestrator：多 stage 编排核心: vllm-omni/engine-orchestrator.md
       - 跨 stage 数据面：连接器与 KV 传输（骨架）: vllm-omni/distributed-connectors-kv.md

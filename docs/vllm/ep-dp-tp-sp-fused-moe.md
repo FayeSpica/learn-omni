@@ -17,6 +17,8 @@ tags:
 > 抽象地背"专家并行/数据并行/张量并行/序列并行"很容易混。本文换一个落点：盯着 **MoE 层那一个 `FusedMoE` 算子**,看它的前向被这四个维度分别**沿哪根轴切开**、各自要付出**什么通信**。把一个算子拆清楚,四个名词的边界就自然分明了。
 >
 > 配置语义对照 vLLM 的 `FusedMoEParallelConfig`(`vllm/model_executor/layers/fused_moe/config.py`)与 `FusedMoE`(`.../fused_moe/layer.py`)。
+>
+> 家族里还有第 5 根轴 **CP(上下文并行)**——切的是**序列/KV 维**而非权重,专治长上下文,见 [上下文并行 CP:PCP 与 DCP](context-parallel-pcp-dcp.md)。
 
 ## 一、先把 FusedMoE 前向拆成四个阶段
 

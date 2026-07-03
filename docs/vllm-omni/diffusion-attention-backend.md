@@ -12,7 +12,7 @@ tags:
 
 > 一个问题：**vllm-omni 的 diffusion 注意力后端是怎么组织的？** 从 `vllm_omni/diffusion/attention/backends/ring_pytorch_attn.py` 这一个文件切进去，把「选后端 → 建后端 → 跑 kernel → 多卡 ring」整条链路摊开。
 >
-> 本文基于 `vllm-omni` 源码（`vllm_omni/diffusion/attention/`）。类名/继承关系可靠，行号可能随版本漂移。相关阅读：[Omni 平台无关/相关解耦](platform-decoupling.md)。
+> 本文基于 `vllm-omni` 源码（`vllm_omni/diffusion/attention/`）。类名/继承关系可靠，行号可能随版本漂移。相关阅读：[Omni 平台无关/相关解耦](platform-decoupling.md)；这里的 ring attention 正是 LLM 侧 **CP(上下文并行)** 的通信 kernel,概念见 [上下文并行 CP:PCP 与 DCP](../vllm/context-parallel-pcp-dcp.md)。
 
 ## 结论速览
 
