@@ -96,6 +96,7 @@ nav:
       - 1 · Transformer 架构:
           - 手写 Transformer / RMSNorm（可运行）: llm-basics/handwritten-transformer.md
           - Self-Attention 机制: llm-basics/self-attention.md
+          - Qwen3-0.6B 端到端：结构与数学（收口）: llm-basics/qwen3-0_6b-end-to-end.md
       - 2 · 现代变体:
           - 注意力变体 GQA/MQA/MLA: llm-basics/attention-variants.md
           - MoE 基础: llm-basics/moe-basics.md
@@ -132,6 +133,7 @@ nav:
           - 昇腾代次与原生低精度格式(A2/A3/A5·950): vllm-ascend/snippets/ascend-generations-low-precision.md
   - vLLM-Omni:
       - vllm-omni/index.md
+      - 🗺️ 架构地图（核心中枢，从这里开始）: vllm-omni/architecture-map.md
       - vLLM/Ascend/Omni 模块导图: vllm-omni/vllm-omni-npu.md
       - Qwen3-Omni 在 NPU 上是怎么跑起来的: vllm-omni/qwen3-omni-npu.md
       - 吃透 Qwen3-Omni：七条路径覆盖地图与阅读方法: vllm-omni/qwen3-omni-mastery-roadmap.md

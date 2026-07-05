@@ -42,6 +42,7 @@ flowchart TD
 
 - ✅ **[深入理解:PyTorch 手写 Transformer / RMSNorm](handwritten-transformer.md)** —— 从零手写 RMSNorm/RoPE/因果注意力(GQA)/SwiGLU,**可运行已验证**;本节各组件的动手总览
 - 🏗 **[Self-Attention 机制](self-attention.md)**:QKV、缩放点积、为什么要除 √d、多头的意义
+- ✅ **[Qwen3-0.6B 端到端:结构与数学](qwen3-0_6b-end-to-end.md)** —— 把上面组件串成一个真实小模型,从 token id 到 logits 每步给形状+公式;QK-Norm/GQA/SwiGLU/tied embed 的收口页
 - 🚧 Tokenizer 与 Embedding:文本 → token id → 向量;位置编码 RoPE/ALiBi 与长度外推(RoPE 实现见手写篇)
 - 🚧 FFN / MLP 与激活:GeLU、**SwiGLU**
 - 🚧 归一化:LayerNorm vs **RMSNorm**、Pre-LN vs Post-LN
