@@ -20,6 +20,10 @@ flowchart TD
   PIPE --> PI1["Qwen3-Omni 怎么跑起来 ✅"]
   PIPE --> PI2["核心组件与请求流转 ✅"]
   PATH --> PA1["全模态 vs 纯文本路径 ✅"]
+  PATH --> PA2["P1 音频→embedding→scatter ✅"]
+  PATH --> PA3["P4 Thinker→Talker 交接 ✅"]
+  PATH --> PA4["Qwen3-TTS 三种音色模式 ✅"]
+  PATH --> PA5["P2 视觉→emb + TMRoPE ✅"]
   CLS --> C1["三处 worker 继承梳理 + 数据流对齐契约 ✅"]
   PLAT --> PL1["平台无关/相关解耦 ✅"]
   PLAT --> PL2["platforms/npu 架构导读 ✅"]
@@ -43,11 +47,16 @@ flowchart TD
 **② 多阶段流水线与请求流转**
 
 - [Qwen3-Omni 在 NPU 上是怎么跑起来的](qwen3-omni-npu.md) — 三段式 Thinker→Talker→Code2Wav 与逐跳数据流
+- [吃透 Qwen3-Omni：七条路径覆盖地图与阅读方法](qwen3-omni-mastery-roadmap.md) — P1–P7 覆盖地图、双代码库三角法、缺口与下一步
 - [以 Qwen3-Omni 拆解核心组件与请求流转](components-request-flow.md) — engine / orchestrator / connector / scheduler
 
 **③ 输入路径与模态分叉**
 
 - [全模态(图/音)与纯文本用例的路径区别](multimodal-vs-text-path.md) — 分叉只在 Thinker 前段，入 backbone 即合流
+- [P1 音频路径：mel→AuT→embedding→scatter（双库对照）](audio-encoder-path.md) — HF 读语义、vllm-omni 读工程，钉死占位符 scatter 与帧数对齐两处 NPU 雷点
+- [P4 Thinker→Talker 交接：哪层 hidden/怎么拼/speaker](thinker-talker-handoff.md) — 接 accept_hidden_layer(=24) 非最后层，文本位/多模态位分走两条投影，speaker 查表注入
+- [P2 图/视频→ViT→embedding 与 TMRoPE 时间对齐](vision-tmrope-path.md) — ViT 可黑盒，题眼是 deepstack 多尺度旁路 + `[3,B,S]`(t,h,w) 三维位置、音视频交织编号
+- [Qwen3-TTS 三种音色模式：Base/VoiceDesign/CustomVoice](qwen3-tts-voice-modes.md) — 三种 speaker 来源同台：ECAPA 抽取(enc_dim) / id 查表 / 文本描述，差异集中在 codec_input 组装
 
 **④ 类结构：worker / runner**
 
