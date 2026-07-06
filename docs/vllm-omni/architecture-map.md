@@ -15,6 +15,15 @@ tags:
 >
 > 一句话定位：**vllm-omni = 架在 vLLM 之上的「多阶段任意模态服务框架」**。vanilla vLLM 服务单模型（token 进 token 出）；vllm-omni 补的是 vLLM 缺的那层——多模型流水编排、跨阶段隐状态传递、非 LLM 的波形/扩散 stage、以及 NPU 平台解耦。为什么非它不可，见 [多模态全流程综述](multimodal-runtime-overview.md)。
 
+!!! warning "为什么是「多 stage 异构编排」而不是「一个 omni 大模型」——本框架最本质的存在理由"
+    **omni-in 是真的，omni-out 不是。** 现在没有任何单模型能「全模态进、全模态出」：
+    
+    - **输入侧**（理解）：文/图/视频/音频真能一起进 —— 这半是实的（Thinker 吃全模态）。
+    - **输出侧**（生成）：塌成很窄一段。**文本**通用；**语音**有，但它是 Talker 把文本回复「读出来」的 TTS，不是任意音频；**图像**只在 diffusion 类模型（如 [BAGEL](bagel-model-anatomy.md)）里出，且**不与音频同框**；**视频**生成侧基本没有。**没有一个模型 `{文,图,音,视频}` 全出。**
+    - **根因**：文本/语音-codec 是**离散 token**，贴 AR-LLM 范式；图像/视频更适合 **diffusion**（连续迭代去噪），是**另一套生成过程**，折不进同一条 AR token 流。真 omni-out 要求在单模型里统一 AR + diffusion —— **前沿未解**。
+    
+    **所以才需要本框架**：既然没有单模型能全出，就用 stage 编排把 omni-in 的理解结果，分发给各自专精一种输出的下游生成器。这正是 pipeline 里 `execution_type` 同时有 **`LLM_AR`**（Thinker/Talker）和 **`LLM_GENERATION`/diffusion**（[扩散 pipeline](diffusion-pipeline-internals.md)）、不同模型走不同 pipeline 的原因。**「omni」当下准确的说法是 *many-in, text(+speech)-out*；any-to-any 是愿景，不是现货。**
+
 ## 一、架构总图
 
 ```mermaid
