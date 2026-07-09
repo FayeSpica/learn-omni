@@ -140,6 +140,7 @@ nav:
       - P1 音频路径：mel→AuT→embedding→scatter（双库对照）: vllm-omni/audio-encoder-path.md
       - P4 Thinker→Talker 交接：哪层 hidden/怎么拼/speaker（双库对照）: vllm-omni/thinker-talker-handoff.md
       - P2 图/视频→ViT→embedding 与 TMRoPE 时间对齐（双库对照）: vllm-omni/vision-tmrope-path.md
+      - Qwen3-TTS 专题：从架构到 vllm-omni 源码端到端: vllm-omni/qwen3-tts-end-to-end.md
       - Qwen3-TTS 三种音色模式：Base/VoiceDesign/CustomVoice（含 enc_dim）: vllm-omni/qwen3-tts-voice-modes.md
       - 多模态全流程与 omni 类的关联（GPU/NPU）: vllm-omni/multimodal-runtime-overview.md
       - 嵌套图捕获为什么不行（#4519）: vllm-omni/nested-graph-capture.md
