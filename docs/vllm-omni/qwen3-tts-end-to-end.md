@@ -356,10 +356,10 @@ audios[idx] = wav.to(float32).reshape(-1)          # :549
 
 ```mermaid
 flowchart LR
-    A["chunk#0: ref_code + codes"] -->|_cache_ref_context :398| CACHE[(ref_context LRU<br/>按 request_id)]
-    B["chunk#k: 仅 codes"] -->|_get_ref_context :400| CACHE
-    CACHE -->|cat(cached_ref, codes) :407| DEC["chunked_decode"]
-    F["finished"] -->|_pop_ref_context :553| CACHE
+    A["chunk#0: ref_code + codes"] -->|"_cache_ref_context :398"| CACHE[("ref_context LRU<br/>按 request_id")]
+    B["chunk#k: 仅 codes"] -->|"_get_ref_context :400"| CACHE
+    CACHE -->|"cat(cached_ref, codes) :407"| DEC["chunked_decode"]
+    F["finished"] -->|"_pop_ref_context :553"| CACHE
     style CACHE fill:#fff3cd
 ```
 
