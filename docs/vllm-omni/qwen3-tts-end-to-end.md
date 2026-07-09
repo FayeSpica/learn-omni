@@ -88,7 +88,7 @@ QWEN3_TTS_PIPELINE = PipelineConfig(
 )
 ```
 
-> **关键洞察**：`engine_output_type="latent"`（:27）说明 stage 0 的"产物"不是文本 token 而是**声学码**；两 stage 之间没有共享 KV，靠 stage_input_processor 的三个回调（`full_payload` / `token_only` / `async_chunk`）搬运。这与 Qwen3-Omni 的 **三** stage（thinker→talker→code2wav）差一段——TTS 没有 thinker，文本直接进 talker（见 [与 Qwen3-Omni 的异同](#与-qwen3-omni-的异同)）。
+> **关键洞察**：`engine_output_type="latent"`（:27）说明 stage 0 的"产物"不是文本 token 而是**声学码**；两 stage 之间没有共享 KV，靠 stage_input_processor 的三个回调（`full_payload` / `token_only` / `async_chunk`）搬运。这与 Qwen3-Omni 的 **三** stage（thinker→talker→code2wav）差一段——TTS 没有 thinker，文本直接进 talker（见 [与 Qwen3-Omni 的异同](#b-qwen3-omni)）。
 
 ---
 
