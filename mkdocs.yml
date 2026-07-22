@@ -178,6 +178,7 @@ nav:
           - npu-adaptation/runner-compare/index.md
           - "L2 · _prepare_inputs（MRO 分叉）": npu-adaptation/runner-compare/prepare-inputs.md
           - "L2 · _dummy_run / 图捕获": npu-adaptation/runner-compare/graph-capture.md
+          - "L2 · AR runner 全函数解剖（含理论底座）": npu-adaptation/runner-compare/ar-runner-anatomy.md
           - 漂移日志（release 对齐）: npu-adaptation/runner-compare/drift-log.md
 
 not_in_nav: |
