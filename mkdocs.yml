@@ -125,6 +125,7 @@ nav:
       - DeepSeek V4 Flash：从原理到 vLLM 实现: vllm/deepseek-v4-flash.md
       - 碎片知识:
           - vllm/snippets/index.md
+          - "cuda.Event / npu.Event：异步时间线上的路标": vllm/snippets/cuda-npu-event.md
   - vLLM-Ascend:
       - vllm-ascend/index.md
       - 碎片知识:
