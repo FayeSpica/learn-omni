@@ -135,6 +135,7 @@ nav:
   - vLLM-Omni:
       - vllm-omni/index.md
       - 🗺️ 架构地图（核心中枢，从这里开始）: vllm-omni/architecture-map.md
+      - 📚 全特性图鉴（v0.25.0rc1 · 按特性分章节）: vllm-omni/v0250rc1-feature-atlas.md
       - vLLM/Ascend/Omni 模块导图: vllm-omni/vllm-omni-npu.md
       - Qwen3-Omni 在 NPU 上是怎么跑起来的: vllm-omni/qwen3-omni-npu.md
       - 吃透 Qwen3-Omni：七条路径覆盖地图与阅读方法: vllm-omni/qwen3-omni-mastery-roadmap.md
