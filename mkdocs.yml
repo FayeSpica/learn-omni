@@ -123,6 +123,7 @@ nav:
       - EP/DP/TP/SP 区别：从 FusedMoE 讲起: vllm/ep-dp-tp-sp-fused-moe.md
       - 上下文并行 CP：PCP 与 DCP（长序列/长 KV）: vllm/context-parallel-pcp-dcp.md
       - DeepSeek V4 Flash：从原理到 vLLM 实现: vllm/deepseek-v4-flash.md
+      - 多模态处理全流程（v0.25.1 三阶段源码核对）: vllm/multimodal-processor-flow.md
       - 碎片知识:
           - vllm/snippets/index.md
           - "cuda.Event / npu.Event：异步时间线上的路标": vllm/snippets/cuda-npu-event.md

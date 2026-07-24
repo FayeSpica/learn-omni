@@ -35,6 +35,7 @@ flowchart TD
 - [vLLM IR 是什么：从 CustomOp 的困境说起](vllm-ir-and-customop.md)
 - [图模式：eager / PIECEWISE / FULL（GPU·NPU·omni 三层串讲）](cudagraph-modes.md)
 - [EP / DP / TP / SP 区别：从 FusedMoE 算子讲起](ep-dp-tp-sp-fused-moe.md)
+- [多模态处理全流程：v0.25.1 三阶段源码核对（MMProcessor）](multimodal-processor-flow.md)
 
 另见 [碎片知识](snippets/index.md)：速查、排错、源码片段等零散条目。
 
