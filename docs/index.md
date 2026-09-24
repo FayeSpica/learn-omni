@@ -26,6 +26,14 @@ hide:
 
     [:octicons-arrow-right-24: 进入笔记](generative-basics/index.md) · [碎片知识](generative-basics/snippets/index.md)
 
+-   :material-file-code:{ .lg .middle } __modeling__
+
+    ---
+
+    从 HF 权重到模型推理：参数加载、逐层计算、张量形状与流式状态。
+
+    [:octicons-arrow-right-24: 进入笔记](modeling/index.md)
+
 -   :material-engine:{ .lg .middle } __vLLM__
 
     ---

@@ -116,6 +116,9 @@ nav:
       - 碎片知识:
           - generative-basics/snippets/index.md
           - 扩散加速的两根轴：量化 vs 蒸馏: generative-basics/snippets/diffusion-accel-axes.md
+  - modeling:
+      - modeling/index.md
+      - Qwen3-TTS 推理流程详解: modeling/qwen3_tts_infer_flow.md
   - vLLM:
       - vllm/index.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: vllm/vllm-ir-and-customop.md
