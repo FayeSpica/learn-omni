@@ -119,6 +119,11 @@ nav:
   - modeling:
       - modeling/index.md
       - Qwen3-TTS 推理流程详解: modeling/qwen3_tts_infer_flow.md
+      - MiniMax-H3：音视频联合生成: modeling/minimax-h3.md
+      - Fish Audio Drama 3：角色与语音生成: modeling/fishaudio-drama3.md
+      - Qwen-Image-2.1：图像生成与编辑: modeling/qwen-image-2-1.md
+      - YuE2：歌词、乐谱与歌曲: modeling/yue2.md
+      - MiniMax Music 3：从音乐结构到声音: modeling/minimax-music3.md
   - vLLM:
       - vllm/index.md
       - vLLM IR 是什么：从 CustomOp 的困境说起: vllm/vllm-ir-and-customop.md
