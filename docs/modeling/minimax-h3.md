@@ -48,14 +48,21 @@ MiniMax-H3/
 [配置] `FL2VA/text_encoder/config.json` 的架构为 `Qwen3VLForConditionalGeneration`。
 其 `text_config` 是：
 
-```text
-num_hidden_layers = 64         hidden_size = 5120
-num_attention_heads = 64       num_key_value_heads = 8
-head_dim = 128                intermediate_size = 25600
-vocab_size = 151936
-```
+| 配置字段 | 实际值 |
+| --- | --- |
+| `num_hidden_layers` | 64（Omni 执行前 50 层） |
+| `hidden_size` | 5120 |
+| `num_attention_heads` / `num_key_value_heads` | 64 / 8 |
+| `head_dim` | 128 |
+| `intermediate_size` | 25600 |
+| `vocab_size` | 151936 |
 
-它还带视觉塔：[配置] `vision_config.depth=27`、`hidden_size=1152`、`num_heads=16`、`out_hidden_size=5120`。
+它还带视觉塔，实际配置如下：
+
+| 组件 | 层数 | hidden | 注意力头数 | 输出条件宽度 |
+| --- | --- | --- | --- | --- |
+| Qwen3-VL 视觉塔 | 27 | 1152 | 16 | 5120 |
+
 所以“文本编码器”不是说这个组件只能接受纯文字，参考视觉素材可通过 Qwen3-VL 的处理路径形成条件特征。
 
 [头部] 第一个文本分片实际读到：
@@ -81,14 +88,16 @@ K/V 只拆成 8 个 head，因此是 GQA；不需要存 64 份完全独立的 K/
 
 [配置] `FL2VA/transformer/config.json` 与此次读取的 `Ref2VA/transformer/config.json` 在以下结构字段一致：
 
-```text
-num_layers = 50                token_refiner_num_layers = 2
-hidden_size = 5376             num_attention_heads = 56
-attention_head_dim = 128       ffn_hidden_size = 14336
-latents_dim = 24               audio_latents_dim = 32
-patch_size = [1,2,2]           text_dim = 5120
-time_embed_dim = 2688          adaln_out_features = 96768
-```
+| 配置字段 | 实际值 |
+| --- | --- |
+| `num_layers` / `token_refiner_num_layers` | 50 / 2（不同模块） |
+| `hidden_size` | 5376 |
+| `num_attention_heads` / `attention_head_dim` | 56 / 128 |
+| 注意力内部宽度（推导） | 7168 = 56×128 |
+| `ffn_hidden_size` | 14336 |
+| `latents_dim` / `audio_latents_dim` | 24 / 32 |
+| `patch_size` / `text_dim` | [1,2,2] / 5120 |
+| `time_embed_dim` / `adaln_out_features` | 2688 / 96768 |
 
 50 个主层和 2 个 refiner 层是不同模块；不能把所有层统一说成 52 次相同主层计算。
 下面只列实际头部中读到的关键矩阵。
@@ -150,6 +159,15 @@ Visual VAE 的实际 wrapper config 给出 `latent_channels=24`，Audio VAE 给�
 接下来继续用实际 VAE 配置与头部，把像素、波形和 latent 接起来。
 
 ### 0.6 两个 VAE 也有真实结构：像素/波形怎样接上 latent
+
+先按组件对照结构；卷积网络用尺度级数描述，避免与 Transformer 层数混算：
+
+| VAE 组件 | 层数 / 级数 | 主要通道或工作宽度 | 注意力头数 / head_dim |
+| --- | --- | --- | --- |
+| Visual encoder | 6 个尺度级，每级 2 个残差块 | 128 → 256 → 256 → 512 → 512 → 1024；latent 24 | 不适用 |
+| Visual ViT decoder | 36 层 | 2048 | 32 / 64 |
+| Audio encoder | 5 级 | 入口特征 64；latent 32 | 不适用 |
+| Audio BigVGAN decoder | 7 级 | 输入投影 2048；内部输出单声道 | 不适用 |
 
 **Visual VAE 的 encoder 是卷积结构，当前发布 decoder 是 ViT。**
 [配置] `FL2VA/video_vae/source/config.json` 给出 RGB 输入/输出各 3 通道，`ch=128`，六级 `ch_mult=[1,2,2,4,4,8]`，`num_res_blocks=2`。

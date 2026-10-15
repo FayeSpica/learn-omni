@@ -36,21 +36,19 @@ checkpoint 是“训练结果的存档”：`config.json` 描述组装规则，s
 
 以下来自这份 checkpoint 的实际 config，不是仅抄本地 Python 类的默认参数：
 
-```text
-text_config:
-  层数 40；hidden_size 2048；词表 252288
-  full-attention query heads 16；KV heads 2；head_dim 256
-  linear key heads 16 × 128；value heads 32 × 128
-  routed experts 256；每 token 选择 8；每专家 FFN 中间维度 512
-  shared expert 中间维度 512
-  attention 排列：[linear, linear, linear, full] 重复 10 次
+| 组件 | 层数 | hidden | Q / KV 头数 | head_dim | FFN 中间宽度 |
+| --- | --- | --- | --- | --- | --- |
+| 文本主干 | 40（30 线性 + 10 完整注意力） | 2048 | 16 / 2（完整注意力） | 256（完整注意力） | 每路由 / 共享专家均为 512 |
+| 码本塔共享层 | 4 | 2048 | 16 / 2 | 256 | 6144 |
+| 码本塔残差预测层 | 9（10 码本减 1） | 2048 | 16 / 2 | 256 | 6144 |
 
-audio_decoder_config:
-  hidden/dim 2048；query heads 16；KV heads 2；head_dim 256
-  FFN 中间维度 6144
-  codebooks 10；每码本词表 4096
-  shared_enrichment_layers 4
-```
+| 其他结构字段 | 实际配置 |
+| --- | --- |
+| 文本词表 | 252288 |
+| 线性注意力 key / value 头 | 16×128 / 32×128 |
+| 路由专家数 / 每 token 选择数 | 256 / 8 |
+| 主干注意力排列 | [linear, linear, linear, full] 重复 10 次 |
+| 音频码本数 / 每码本词表 | 10 / 4096 |
 
 注意 $16\times256=4096$，**不是**隐藏维度 2048。注意力投影可以先把 2048 维映射到更宽的多头空间，再投影回来；不能用 `hidden_size / heads` 擅自改掉 checkpoint 明示的 `head_dim`。
 

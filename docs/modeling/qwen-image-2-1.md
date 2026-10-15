@@ -118,28 +118,38 @@ processor 整理输入，scheduler 更新采样状态；它们没有这里列出
 完整来源与精选 header 条目保存在 [checkpoint 核对记录](checkpoints/qwen-image-2-1.json)。
 两个索引文件的真实参数名也分别覆盖 DiT block `0…31`、语言层 `0…35` 和视觉 block `0…26`，与下面的 32／36／27 层配置相互印证。
 
-**生成 DiT。** `transformer/config.json` 声明 `num_layers=32`，attention 是 `32` 个头、每头 `128` 维，因此内部宽度为 `4096`。
-输入／输出 latent 通道都是 `64`，`patch_size=1`，条件宽度 `context_in_dim=4096`，`mlp_ratio=3`。
-所以前馈网络的中间宽度是 `4096×3=12288`，而不是把 attention 的头数当作 FFN 宽度。
-`causal_condition=true` 是实际配置字段；`causal_block` 没有写在这份 config 中，当前 Omni 构造函数默认补为 `True`。
+| Transformer 组件 | 层数 | hidden | Q / KV 头数 | head_dim | FFN 中间宽度 |
+| --- | --- | --- | --- | --- | --- |
+| 生成 DiT | 32 | 4096 | 32 / 32 | 128 | 12288 |
+| Qwen3-VL 语言骨干 | 36 | 4096 | 32 / 8 | 128 | 12288 |
+| Qwen3-VL 视觉骨干 | 27 | 1152 | 16 / 16 | 72 | 4304 |
 
-**Qwen3-VL 的语言部分。** `text_config` 是 `36` 层、hidden `4096`、FFN `12288`，有 `32` 个 query heads、`8` 个 KV heads，每头 `128` 维。
-因此 Q 投影输出宽度 `4096`，K/V 各为 `1024`，这是分组查询注意力 GQA。
-不是“所有模型里的 Q、K、V 都同宽”；下面会看到生成 DiT 的 K/V 就与 Q 同宽。
+`hidden` 是各位置的隐藏特征宽度；Q / KV 分别表示 query 头数与 key/value 头数。视觉骨干的 `head_dim=1152/16=72`、DiT 的 FFN 宽度 `4096×mlp_ratio(3)=12288` 是按实际配置推导，其余对应配置字段。
+语言骨干使用 GQA，Q 投影输出 4096 维，K/V 各为 1024 维；生成 DiT 的 Q/K/V 则同宽。
 
-**Qwen3-VL 的视觉部分。** `vision_config` 是 `27` 层、hidden `1152`、`16` 个头，每头 `72` 维，FFN 中间宽度 `4304`。
-视觉 patch 为 `16×16`，`temporal_patch_size=2`，空间合并倍率 `2`；输出条件宽度为 `4096`。
-它的职责是读参考图，不能把这套视觉 patch 与 DiT 的 latent patch 混为一谈。
+| 组件接口 | 实际配置 |
+| --- | --- |
+| DiT latent 输入 / 输出通道 | 64 / 64 |
+| DiT patch / 条件宽度 | `patch_size=1` / `context_in_dim=4096` |
+| 视觉 patch / 时间 patch / 空间合并 | 16×16 / 2 / 2 |
+| 视觉输出条件宽度 | 4096 |
 
-**VAE。** config 声明输入和输出都是 `4` 通道，也就是 RGBA；`z_dim=64`。
-编码器基宽 `96`、解码器基宽 `144`，`dim_mult=[1,2,4,8,8]`，一共五个空间 stage。
-编码方向各 stage 的输出通道依次为 `96 → 192 → 384 → 768 → 768`。
-解码方向在 latent 输入投影到 `1152` 通道后，五个 up stage 输出依次为 `1152 → 1152 → 576 → 288 → 144`，最后输出 `4` 通道。
-这里的 stage 是 VAE 网络内部尺度级别，不是五个 Omni 服务进程。
+`causal_condition=true` 是实际配置字段；`causal_block` 未写入这份 config，当前 Omni 构造函数默认补为 `True`。视觉 patch 与 DiT latent patch 属于不同网络，不要混为一谈。
 
-VAE config 的 `num_res_blocks=2`，源码的 down stage 使用两块，而 up stage 使用 `num_res_blocks+1=3` 块。
-“VAE 有五个 stage”不等于“VAE 只有五层”，其中还有卷积、残差块和中间模块。
-四次空间缩放得到 `16×` 压缩；config 同时有时间压缩 `8×`，静态图像例子只使用单帧轴，不据此把空间倍率改成 8。
+VAE 使用卷积尺度级别描述结构，单独列出：
+
+| VAE 字段 | 编码方向 | 解码方向 |
+| --- | --- | --- |
+| 图像通道 | 输入 RGBA：4 | 输出 RGBA：4 |
+| latent 通道 | 64 | 64 |
+| 基宽 | 96 | 144 |
+| 空间 stage 数 | 5 | 5 |
+| 各 stage 输出通道 | 96 → 192 → 384 → 768 → 768 | 1152 → 1152 → 576 → 288 → 144 |
+| 每 stage 残差块数 | 2 | 3（`num_res_blocks+1`） |
+
+`dim_mult=[1,2,4,8,8]`；解码入口先把 latent 投影到 1152 通道，末尾再输出 4 通道。
+这里的 stage 是 VAE 内部尺度级别，既不是 Omni 进程数，也不代表整个 VAE 只有五层。
+四次空间缩放得到 `16×` 压缩；config 同时有时间压缩 `8×`，静态图像只使用单帧轴，不据此把空间倍率改成 8。
 
 [固定 DiT 配置](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/transformer/config.json)、[Qwen3-VL 配置](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/text_encoder/config.json)、[VAE 配置](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/vae/config.json)。
 

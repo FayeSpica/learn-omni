@@ -34,18 +34,15 @@ YuE2-3B/                       YuE2-Vae/
 
 主 checkpoint 实际 config 给出：
 
-```text
-hidden_size               2048
-num_hidden_layers         28
-num_attention_heads       16
-num_key_value_heads       8
-head_dim                  128
-intermediate_size         6144
-vocab_size                184704
-max_position_embeddings   24576
-latent_dim                64
-max_latent_frames         24576
-```
+| 配置字段 | 实际值 |
+| --- | --- |
+| `num_hidden_layers` | 28（每个层号含 AR 与 NAR 路径） |
+| `hidden_size` | 2048 |
+| `num_attention_heads` / `num_key_value_heads` | 16 / 8 |
+| `head_dim` / `intermediate_size` | 128 / 6144 |
+| `vocab_size` | 184704 |
+| `max_position_embeddings` | 24576 |
+| `latent_dim` / `max_latent_frames` | 64 / 24576 |
 
 header 中同时出现 `model.layers.0` 到 `model.layers.27` 的普通 attention/MLP 和 `nar_*` 权重。这说明 28 个层编号各包含 AR 与 NAR 路径，不能理解成“总共 28 个小操作”。
 
@@ -108,12 +105,14 @@ time_embedder.mlp.2.weight     [2048,2048]  BF16
 
 实际 `YuE2-Vae` config 给出：
 
-```text
-sample_rate 48000；audio_channels 2；latent_dim 64
-channels 64；c_mults [1,2,4,8,16,32]
-strides [2,2,4,4,5,6]；downsampling_ratio 1920
-decoder_config.final_tanh false；dtype float32
-```
+| 配置字段 | 实际值 |
+| --- | --- |
+| 采样率 / 音频通道 | 48000 / 2 |
+| latent 维度 / 基础通道 | 64 / 64 |
+| `c_mults` | [1,2,4,8,16,32] |
+| `strides` | [2,2,4,4,5,6] |
+| `downsampling_ratio` | 1920 |
+| `decoder_config.final_tanh` / `dtype` | false / float32 |
 
 这里有六个 decoder 上采样块，按反向 stride 次序 `6,5,4,4,2,2` 展开时间轴。倍率相乘为 $6\times5\times4\times4\times2\times2=1920$，这解释一帧潜变量怎样对应 1920 个波形采样点。
 

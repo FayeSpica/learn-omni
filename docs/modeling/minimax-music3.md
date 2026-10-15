@@ -45,16 +45,26 @@ MiniMax-Music3/
 此版本同时保留 `qwen_7B/` 参考实现布局；Omni 的 Global 权重从 `language_model/` 加载，本文使用这套路径。
 4 个 Global 分片与 2 个 DiT 分片是存储划分，分别不等于 4 层和 2 层网络。
 
+三套 Transformer 的结构先并排看；具体配置来源与 shape 在后面逐项展开：
+
+| 组件 | 层数 | hidden | Q / KV 头数 | head_dim | FFN 中间宽度 |
+| --- | --- | --- | --- | --- | --- |
+| Global | 36 | 4096 | 32 / 8 | 128 | 12288 |
+| Local | 4 | 4096 | 16 / 16 | 256（推导） | 6144 |
+| 声学 DiT | 36 | 2048（推导） | 32 / 32 | 64 | 8192 |
+
+Local 的每头维度按 `4096/16` 推导；DiT 工作宽度按 `32×64` 推导。三者的层数、head_dim 与权重不能互换。
+
 ### 0.2 Global：36 层 Qwen3，先把 GQA 对上
 
 [配置] `language_model/config.json` 的实际字段：
 
-```text
-num_hidden_layers = 36         hidden_size = 4096
-num_attention_heads = 32       num_key_value_heads = 8
-head_dim = 128                intermediate_size = 12288
-vocab_size = 200000           max_position_embeddings = 10240
-```
+| 配置字段 | 实际值 |
+| --- | --- |
+| `num_hidden_layers` / `hidden_size` | 36 / 4096 |
+| `num_attention_heads` / `num_key_value_heads` | 32 / 8 |
+| `head_dim` / `intermediate_size` | 128 / 12288 |
+| `vocab_size` / `max_position_embeddings` | 200000 / 10240 |
 
 [头部] 代表性参数如下，前六项来自第 1 分片，最后一项来自第 4 分片：
 
@@ -81,12 +91,12 @@ SwiGLU MLP 的 gate/up 各投影到 12288，经门控后由 down projection 回�
 
 [配置] `rvq_depth_decoder/config.json` 给出：
 
-```text
-num_layers = 4               hidden_size = 4096
-num_attention_heads = 16     intermediate_size = 6144
-max_position_embeddings = 16
-num_codebooks = 8            audio_vocab_size = 1024
-```
+| 配置字段 | 实际值 |
+| --- | --- |
+| `num_layers` / `hidden_size` | 4 / 4096 |
+| `num_attention_heads` / `intermediate_size` | 16 / 6144 |
+| `max_position_embeddings` | 16 |
+| `num_codebooks` / `audio_vocab_size` | 8 / 1024 |
 
 此处没有单独的 `head_dim` 字段；按模块的 `hidden_size // num_heads` **推导**得到 $4096/16=256$。
 Global 的 head_dim=128、Local 的 256 与后面 DiT 的 64，不能混用。
