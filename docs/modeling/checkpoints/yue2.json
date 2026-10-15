@@ -1,0 +1,355 @@
+{
+  "checked_at": "2026-10-15",
+  "method": "HTTP Range reads of bytes 0-7 for little-endian header length, then bytes 8 through 7+header_length; exact length checked. No tensor body downloaded. Config and repository file listing fetched separately.",
+  "omni_revision": "910b8f07d23c7f387729173333c9d5f927dc6c4f",
+  "components": [
+    {
+      "repo": "m-a-p/YuE2-3B",
+      "revision": "8f24312f187763b9854adeec87e437e2b03bbff1",
+      "revision_source": "https://huggingface.co/api/models/m-a-p/YuE2-3B",
+      "file_tree": "https://huggingface.co/m-a-p/YuE2-3B/tree/8f24312f187763b9854adeec87e437e2b03bbff1",
+      "config_source": "https://huggingface.co/m-a-p/YuE2-3B/resolve/8f24312f187763b9854adeec87e437e2b03bbff1/config.json",
+      "config": {
+        "return_dict": true,
+        "output_hidden_states": false,
+        "torchscript": false,
+        "dtype": "bfloat16",
+        "tie_word_embeddings": false,
+        "is_encoder_decoder": false,
+        "is_decoder": false,
+        "add_cross_attention": false,
+        "architectures": [
+          "YuE2ForCausalLM"
+        ],
+        "bos_token_id": null,
+        "pad_token_id": null,
+        "eos_token_id": null,
+        "decoder_start_token_id": null,
+        "transformers_version": "4.57.6",
+        "auto_map": {
+          "AutoConfig": "modeling_yue2.YuE2Config",
+          "AutoModelForCausalLM": "modeling_yue2.YuE2ForCausalLM"
+        },
+        "model_type": "yue2",
+        "hidden_size": 2048,
+        "num_hidden_layers": 28,
+        "num_attention_heads": 16,
+        "num_key_value_heads": 8,
+        "head_dim": 128,
+        "intermediate_size": 6144,
+        "vocab_size": 184704,
+        "rms_norm_eps": 1e-06,
+        "rope_theta": 1000000,
+        "max_position_embeddings": 24576,
+        "latent_type": "vae",
+        "latent_dim": 64,
+        "max_latent_frames": 24576,
+        "timestep_shift": 1.0,
+        "output_attentions": false
+      },
+      "header_reads": [
+        {
+          "file": "model.safetensors",
+          "header_bytes": 73184,
+          "header_sha256": "dcc0f22f23b5a5185a4439db4213d1b90f40f542e15ce32eabd472b172e31831"
+        }
+      ],
+      "selected_tensors": {
+        "model.embed_tokens.weight": {
+          "shape": [
+            184704,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "lm_head.weight": {
+          "shape": [
+            184704,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "vae2llm.weight": {
+          "shape": [
+            2048,
+            64
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "llm2vae.weight": {
+          "shape": [
+            64,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "time_embedder.mlp.0.weight": {
+          "shape": [
+            2048,
+            256
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "time_embedder.mlp.2.weight": {
+          "shape": [
+            2048,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.self_attn.q_proj.weight": {
+          "shape": [
+            2048,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.self_attn.k_proj.weight": {
+          "shape": [
+            1024,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.self_attn.v_proj.weight": {
+          "shape": [
+            1024,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.self_attn.o_proj.weight": {
+          "shape": [
+            2048,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.mlp.gate_proj.weight": {
+          "shape": [
+            6144,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.mlp.up_proj.weight": {
+          "shape": [
+            6144,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.mlp.down_proj.weight": {
+          "shape": [
+            2048,
+            6144
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.nar_self_attn.q_proj.weight": {
+          "shape": [
+            2048,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.nar_self_attn.k_proj.weight": {
+          "shape": [
+            1024,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.0.nar_mlp.gate_proj.weight": {
+          "shape": [
+            6144,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.27.self_attn.q_proj.weight": {
+          "shape": [
+            2048,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        },
+        "model.layers.27.nar_self_attn.q_proj.weight": {
+          "shape": [
+            2048,
+            2048
+          ],
+          "dtype": "BF16",
+          "file": "model.safetensors"
+        }
+      },
+      "tensor_count": 628
+    },
+    {
+      "repo": "m-a-p/YuE2-Vae",
+      "revision": "152733a19ad43aa67e367f9b5503ef8075bb5126",
+      "revision_source": "https://huggingface.co/api/models/m-a-p/YuE2-Vae",
+      "file_tree": "https://huggingface.co/m-a-p/YuE2-Vae/tree/152733a19ad43aa67e367f9b5503ef8075bb5126",
+      "config_source": "https://huggingface.co/m-a-p/YuE2-Vae/resolve/152733a19ad43aa67e367f9b5503ef8075bb5126/config.json",
+      "config": {
+        "return_dict": true,
+        "output_hidden_states": false,
+        "torchscript": false,
+        "dtype": "float32",
+        "tie_word_embeddings": true,
+        "is_encoder_decoder": false,
+        "is_decoder": false,
+        "add_cross_attention": false,
+        "architectures": [
+          "YuE2VAE"
+        ],
+        "bos_token_id": null,
+        "pad_token_id": null,
+        "eos_token_id": null,
+        "decoder_start_token_id": null,
+        "transformers_version": "4.57.6",
+        "auto_map": {
+          "AutoConfig": "modeling_vae.YuE2VAEConfig",
+          "AutoModel": "modeling_vae.YuE2VAE"
+        },
+        "model_type": "yue2_vae",
+        "encoder_config": {
+          "c_mults": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            32
+          ],
+          "channels": 64,
+          "in_channels": 2,
+          "latent_dim": 128,
+          "strides": [
+            2,
+            2,
+            4,
+            4,
+            5,
+            6
+          ],
+          "use_snake": true
+        },
+        "decoder_config": {
+          "c_mults": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            32
+          ],
+          "channels": 64,
+          "final_tanh": false,
+          "latent_dim": 64,
+          "out_channels": 2,
+          "snake_type": "vanilla",
+          "strides": [
+            2,
+            2,
+            4,
+            4,
+            5,
+            6
+          ],
+          "use_filter": false,
+          "use_snake": true
+        },
+        "sample_rate": 48000,
+        "latent_dim": 64,
+        "downsampling_ratio": 1920,
+        "audio_channels": 2,
+        "release_variant": "standard",
+        "decode_core_frames": 1024,
+        "decode_halo_frames": 16,
+        "output_attentions": false
+      },
+      "header_reads": [
+        {
+          "file": "model.safetensors",
+          "header_bytes": 48192,
+          "header_sha256": "dea606f859148508538f2a355c38e77581a7450c839c3515cf1ee3996c638824"
+        }
+      ],
+      "selected_tensors": {
+        "decoder.layers.0.weight_v": {
+          "shape": [
+            2048,
+            64,
+            7
+          ],
+          "dtype": "F32",
+          "file": "model.safetensors"
+        },
+        "decoder.layers.0.weight_g": {
+          "shape": [
+            2048,
+            1,
+            1
+          ],
+          "dtype": "F32",
+          "file": "model.safetensors"
+        },
+        "decoder.layers.1.layers.1.weight_v": {
+          "shape": [
+            2048,
+            1024,
+            12
+          ],
+          "dtype": "F32",
+          "file": "model.safetensors"
+        },
+        "decoder.layers.2.layers.1.weight_v": {
+          "shape": [
+            1024,
+            512,
+            10
+          ],
+          "dtype": "F32",
+          "file": "model.safetensors"
+        },
+        "decoder.layers.6.layers.1.weight_v": {
+          "shape": [
+            64,
+            64,
+            4
+          ],
+          "dtype": "F32",
+          "file": "model.safetensors"
+        },
+        "decoder.layers.8.weight_v": {
+          "shape": [
+            2,
+            64,
+            7
+          ],
+          "dtype": "F32",
+          "file": "model.safetensors"
+        }
+      },
+      "tensor_count": 435
+    }
+  ]
+}

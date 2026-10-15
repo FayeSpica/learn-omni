@@ -2,6 +2,146 @@
 
 > 面向刚接触 AI 与 Omni 的读者。本文核对的是 `fishaudio/drama-3`，以及本地 vLLM-Omni `910b8f07d23c7f387729173333c9d5f927dc6c4f` 的 `fish_omni` 实现；不是把 Fish S2 的架构换个名字。
 
+## 从 checkpoint 到模型结构：先看积木长什么样
+
+### A. 本次读的是哪一份权重
+
+固定 Hugging Face revision：`e0a9218aa48888270f06ef1ed9ea67622c0e17d2`。
+
+[固定版本文件树](https://huggingface.co/fishaudio/drama-3/tree/e0a9218aa48888270f06ef1ed9ea67622c0e17d2) 中，与加载相关的真实文件是：
+
+```text
+fishaudio/drama-3/
+├── config.json
+├── model.safetensors.index.json
+├── model-00001-of-00008.safetensors
+├── ...                         # 连续八个分片
+├── model-00008-of-00008.safetensors
+├── codec.pth
+├── tokenizer.json
+├── tokenizer_config.json
+├── special_tokens_map.json
+└── chat_template.jinja
+```
+
+checkpoint 是“训练结果的存档”：`config.json` 描述组装规则，safetensors 保存学到的矩阵，index 把矩阵名称映射到分片，tokenizer 定义输入文本怎样变成编号。
+
+文件分成八片只为存储和加载，不代表八层模型、八张 GPU 或八位说话人。
+
+本章用 HTTP Range 读取 safetensors 的 8 字节头长度和 JSON header，**没有下载完整大权重**。header 内部记录真实 tensor 名、shape、dtype；它能证明矩阵尺寸，不能证明运行精度或听感。
+
+[精简可复核清单](checkpoints/fishaudio-drama3.json) 保存本节选中的真实矩阵、固定 revision 和读取方法。
+
+### B. config 规定了怎样的骨架
+
+以下来自这份 checkpoint 的实际 config，不是仅抄本地 Python 类的默认参数：
+
+```text
+text_config:
+  层数 40；hidden_size 2048；词表 252288
+  full-attention query heads 16；KV heads 2；head_dim 256
+  linear key heads 16 × 128；value heads 32 × 128
+  routed experts 256；每 token 选择 8；每专家 FFN 中间维度 512
+  shared expert 中间维度 512
+  attention 排列：[linear, linear, linear, full] 重复 10 次
+
+audio_decoder_config:
+  hidden/dim 2048；query heads 16；KV heads 2；head_dim 256
+  FFN 中间维度 6144
+  codebooks 10；每码本词表 4096
+  shared_enrichment_layers 4
+```
+
+注意 $16\times256=4096$，**不是**隐藏维度 2048。注意力投影可以先把 2048 维映射到更宽的多头空间，再投影回来；不能用 `hidden_size / heads` 擅自改掉 checkpoint 明示的 `head_dim`。
+
+tower 的残差预测层数由 `num_codebooks-1=9` 得到。配置与 `CodebookTower` 的组装规则一起说明它是 4 个共享层 + 9 个码本层；不是从文件大小猜出来。
+
+### C. 怎么读一个 Linear 的 shape
+
+PyTorch `Linear(in_features, out_features)` 的权重存成 `[out,in]`。如果输入 $X$ 的形状为 $[B,S,H]$，则：
+
+$$
+Y=XW^\top+b.
+$$
+
+$B$ 是批内请求数，$S$ 是位置数，$H$ 是每个位置的隐藏维度。若 $W=[512,2048]$，输入 $[B,S,2048]$，输出就是 $[B,S,512]$。
+
+实际 vLLM 经常把不同请求的 token 打包成 `[rows,H]`，而不是保持矩形 `[B,S,H]`；线性变换最后一维的规则相同。
+
+Embedding 权重 `[vocab,H]` 则像查字典：输入整数 `[B,S]`，查出 `[B,S,H]`，不是把编号本身拿去做矩阵乘法。
+
+### D. 实读权重：从大矩阵反推部件
+
+下列名称与 shape 来自 safetensors header；为保持可读性，`L` 表示原名前缀 `model.language_model.layers`，并非权重里的真实缩写。
+
+```text
+model.language_model.embed_tokens.weight    [252288,2048] BF16
+L.0.linear_attn.in_proj_qkv.weight           [8192,2048]   BF16
+L.0.linear_attn.conv1d.weight                [8192,1,4]    BF16
+L.0.linear_attn.out_proj.weight              [2048,4096]   BF16
+L.3.self_attn.q_proj.weight                  [8192,2048]   BF16
+L.3.self_attn.k_proj.weight                  [512,2048]    BF16
+L.3.self_attn.v_proj.weight                  [512,2048]    BF16
+L.3.self_attn.o_proj.weight                  [2048,4096]   BF16
+L.0.mlp.experts.0.gate_proj.weight            [512,2048]    F8_E4M3
+L.0.mlp.experts.0.up_proj.weight              [512,2048]    F8_E4M3
+L.0.mlp.experts.0.down_proj.weight            [2048,512]    F8_E4M3
+L.0.mlp.experts.0.gate_proj.weight_scale_inv  [4,16]        F32
+```
+
+第 0 层与第 3 层使用不同前缀，印证了混合注意力；不能把每一层都画成相同的标准 self-attention。
+
+线性注意力的 Q/K 宽度各为 $16\times128=2048$，V 宽度为 $32\times128=4096$，因此合并投影宽度为 $2048+2048+4096=8192$。
+
+完整注意力的 query 宽度为 4096，但 `q_proj` 有 8192 行：配置启用了输出门控，还需要等宽的 gate，不能把它误读成 32 个 query heads。K/V 各为 $2\times256=512$。
+
+FFN 可以理解为“先变宽、非线性处理、再变回去”。这里每个稀疏专家的中间宽度为 512，不能用 tower 的 6144 套进专家 FFN。
+
+FP8 权重不是一串打包的 int4 数字：header 的 dtype 是 `F8_E4M3`。量化尺度另存为 F32 tensor，`[512,2048]` 按 $128\times128$ 块对应 $[4,16]$ 个尺度。它说明的是权重表示布局，不是“整个 forward 全程 FP8”。
+
+实际反量化或量化 kernel 如何使用 `weight_scale_inv`，应以对应加载与 kernel 为准，不能仅凭字段名猜乘法或除法方向。
+
+### E. Tower 的真实矩阵与一次 forward
+
+```text
+audio_decoder.codebook_embeddings.weight                  [40960,2048]
+audio_decoder_mtp_shared.layers.0.semantic_embedding.weight [4096,2048]
+audio_decoder_mtp.layers.0.eh_proj.weight                  [2048,4096]
+audio_decoder_mtp.layers.0.transformer_layer.attention.wqkv.weight
+                                                         [9216,2048]
+audio_decoder_mtp.layers.0.transformer_layer.attention.wo.weight
+                                                         [2048,4096]
+audio_decoder_mtp.layers.0.transformer_layer.feed_forward.w1.weight
+                                                         [6144,2048]
+audio_decoder_mtp.layers.0.transformer_layer.feed_forward.w2.weight
+                                                         [2048,6144]
+```
+
+以上选中 tower 权重的 dtype 都是 BF16。共享码本 embedding 有 $10\times4096=40960$ 行，用码本编号的偏移量查各自字典，而不是一个有 40960 种音色的列表。
+
+`wqkv` 的 9216 行按源码依次拆成：
+
+```text
+query 4096 | output gate 4096 | key 512 | value 512
+```
+
+因此输入 `[rows,2048]` 先变成 `[rows,9216]`；Q 再 reshape 成 `[rows,16,256]`，K/V 成 `[rows,2,256]`。attention 后的 4096 维结果乘 gate，再经 `wo` 回到 2048 维。
+
+`eh_proj=[2048,4096]` 说明它把拼接后的两组 2048 维信息压回 2048 维。读模块实现时，应同时看 concat 的顺序，不能只按名称猜语义。
+
+### F. 权重怎么装进 Omni 的模块
+
+[`FishOmniForConditionalGeneration.load_weights`](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/model_executor/models/fish_omni/fish_omni_model.py#L536) 把三类 `audio_decoder*` 前缀分给 `self.tower`，逐项检查名称与 shape，再复制到同名参数。
+
+例如 checkpoint 的 `audio_decoder_mtp.layers.0...wqkv.weight` 对应 `self.tower.audio_decoder_mtp.layers[0]...wqkv.weight`。其余主干权重交给继承的 Qwen3.5 MoE loader；这部分还依赖配套 vLLM 的名称映射与并行切分实现。
+
+因此“磁盘矩阵形状”不一定等于“某张卡上运行时参数形状”：vLLM 可融合 Q/K/V、融合 gate/up 或进行并行切分；本章先解释原始 checkpoint，再解释实际 forward，不能把两个层级混在一起。
+
+[`ExpertFp8Config`](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/model_executor/models/fish_omni/quantization.py#L19) 对普通 Linear 选择不量化实现，对路由专家复用块 FP8 路径。这正是为什么 header 同时出现 BF16、FP8 和 F32。
+
+`codec.pth` 是另一份 codec 权重，不在 safetensors 分片中。本节没有下载或反序列化它，因此不伪造其内部 tensor shape；后面的 codec 输出格式依据当前 Omni pipeline 与 codec 实现说明。
+
+
 ## 1. 先理解它解决什么问题
 
 普通文字转语音（TTS，Text-to-Speech）要求“把字读对”。Drama 3 还希望控制“怎么演”：同一句“你终于来了”，可以是放松、愤怒、压低声音或带着笑意。

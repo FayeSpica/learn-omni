@@ -2,6 +2,160 @@
 
 > 面向 Omni 与 AI 初学者。核对日期：2026-10-15；实现快照：vLLM-Omni `910b8f07d23c7f387729173333c9d5f927dc6c4f`。本文讲 YuE2-3B，不沿用 YuE 第一代的双阶段离散 codec 架构描述；本文没有重新运行 GPU 性能测试。
 
+## 从 checkpoint 到模型结构：先认识层数和矩阵
+
+### A. 固定两份模型，不只记住“3B”
+
+本次实际读取的 Hugging Face revision 是：
+
+- `m-a-p/YuE2-3B`：`8f24312f187763b9854adeec87e437e2b03bbff1`。
+- `m-a-p/YuE2-Vae`：`152733a19ad43aa67e367f9b5503ef8075bb5126`。
+
+[主模型文件树](https://huggingface.co/m-a-p/YuE2-3B/tree/8f24312f187763b9854adeec87e437e2b03bbff1) 和 [VAE 文件树](https://huggingface.co/m-a-p/YuE2-Vae/tree/152733a19ad43aa67e367f9b5503ef8075bb5126) 的加载核心文件如下：
+
+```text
+YuE2-3B/                       YuE2-Vae/
+├── config.json                ├── config.json
+├── model.safetensors          ├── model.safetensors
+├── modeling_yue2.py            ├── modeling_vae.py
+├── qwen.tiktoken               └── weights_manifest.json
+├── generation_config.json
+├── yue2_generation_config.json
+└── weights_manifest.json
+```
+
+`config` 像装配说明，safetensors 像装好每一块积木所需的真实矩阵；`modeling_*.py` 是官方 Transformers 实现，Omni 则通过自己的已注册模型执行。
+
+本节仅用 HTTP Range 读取 safetensors 的长度字段与 JSON header，没有下载整个权重。主模型 header 为 73184 字节，VAE 为 48192 字节；里面能直接读取名称、shape 与 dtype。
+
+[精简 checkpoint 清单](checkpoints/yue2.json) 保留选中的真实 tensor、实际配置与来源。下面明确区分“配置值”“实读 shape”与“根据维度做的推导”。
+
+### B. 主模型 config：28 层不是全部故事
+
+主 checkpoint 实际 config 给出：
+
+```text
+hidden_size               2048
+num_hidden_layers         28
+num_attention_heads       16
+num_key_value_heads       8
+head_dim                  128
+intermediate_size         6144
+vocab_size                184704
+max_position_embeddings   24576
+latent_dim                64
+max_latent_frames         24576
+```
+
+header 中同时出现 `model.layers.0` 到 `model.layers.27` 的普通 attention/MLP 和 `nar_*` 权重。这说明 28 个层编号各包含 AR 与 NAR 路径，不能理解成“总共 28 个小操作”。
+
+$16\times128=2048$ 是 query 的注意力总宽度，$8\times128=1024$ 是 K/V 总宽度。因此一组 K/V 可以服务多组 query，这叫 GQA（Grouped Query Attention，分组查询注意力）。
+
+`vocab_size` 是完整词表，含普通文字、特殊协议标记与音频 token 区间；不是 184704 个汉字，也不是音频码本只有这么多帧。
+
+### C. 用实读矩阵理解一次 Transformer 层
+
+下面是主模型 header 中的真实名称、shape；这些选中矩阵均为 BF16：
+
+```text
+model.embed_tokens.weight                         [184704,2048]
+lm_head.weight                                    [184704,2048]
+model.layers.0.self_attn.q_proj.weight             [2048,2048]
+model.layers.0.self_attn.k_proj.weight             [1024,2048]
+model.layers.0.self_attn.v_proj.weight             [1024,2048]
+model.layers.0.self_attn.o_proj.weight             [2048,2048]
+model.layers.0.mlp.gate_proj.weight                [6144,2048]
+model.layers.0.mlp.up_proj.weight                  [6144,2048]
+model.layers.0.mlp.down_proj.weight                [2048,6144]
+model.layers.0.nar_self_attn.q_proj.weight         [2048,2048]
+model.layers.0.nar_self_attn.k_proj.weight         [1024,2048]
+model.layers.0.nar_mlp.gate_proj.weight            [6144,2048]
+```
+
+PyTorch Linear 的矩阵按 `[out_features,in_features]` 存储：输入最后一维是 `in`，输出最后一维是 `out`，实际运算为 $Y=XW^\top$（若有 bias 再加 bias）。
+
+设一批输入为 `[B,S,2048]`，其中 B 是请求数、S 是序列位置数：
+
+```text
+q_proj: [B,S,2048] → [B,S,2048] → [B,S,16,128]
+k_proj: [B,S,2048] → [B,S,1024] → [B,S,8,128]
+v_proj: [B,S,2048] → [B,S,1024] → [B,S,8,128]
+attention + o_proj:                     → [B,S,2048]
+```
+
+vLLM 通常进一步把不同请求的 token 打包成 `[rows,2048]`；这是批处理布局变化，不改变最后一维的投影逻辑。
+
+FFN 是前馈网络：gate/up 都把 2048 维变成 6144 维，做门控非线性后，down 再压回 2048 维。不是一条宽度永远不变的直线。
+
+Embedding 则不是 Linear：输入 token 编号 `[B,S]`，按行查询 `[184704,2048]`，得到隐藏向量 `[B,S,2048]`。最后 lm_head 把隐藏向量投到词表分数空间 `[B,S,184704]`。
+
+两份 embedding/head 的 shape 相同不代表共用同一块权重；该 checkpoint 的 `tie_word_embeddings=false`，header 也有分别命名的 tensor。
+
+### D. 连续声音与 Transformer 之间的桥
+
+```text
+vae2llm.weight                 [2048,64]    BF16
+llm2vae.weight                 [64,2048]    BF16
+time_embedder.mlp.0.weight     [2048,256]   BF16
+time_embedder.mlp.2.weight     [2048,2048]  BF16
+```
+
+输入声学状态为 `[B,T,64]`，`vae2llm` 把它映射为 `[B,T,2048]`；加入时间与位置条件后进入 NAR Transformer。输出经 `llm2vae` 回到 `[B,T,64]`，表示本次求值预测的速度场。
+
+时间输入不是直接拿单个数字复制 2048 次：先由时间特征构造 256 维表示，再由上述两层 MLP 映射到隐藏空间。时间进度与歌曲播放位置是两种不同的条件。
+
+### E. VAE 是卷积解码器，不能照搬 attention 的层数解释
+
+实际 `YuE2-Vae` config 给出：
+
+```text
+sample_rate 48000；audio_channels 2；latent_dim 64
+channels 64；c_mults [1,2,4,8,16,32]
+strides [2,2,4,4,5,6]；downsampling_ratio 1920
+decoder_config.final_tanh false；dtype float32
+```
+
+这里有六个 decoder 上采样块，按反向 stride 次序 `6,5,4,4,2,2` 展开时间轴。倍率相乘为 $6\times5\times4\times4\times2\times2=1920$，这解释一帧潜变量怎样对应 1920 个波形采样点。
+
+实读代表权重如下，dtype 都是 F32：
+
+```text
+decoder.layers.0.weight_v             [2048,64,7]
+decoder.layers.0.weight_g             [2048,1,1]
+decoder.layers.1.layers.1.weight_v    [2048,1024,12]
+decoder.layers.2.layers.1.weight_v    [1024,512,10]
+decoder.layers.6.layers.1.weight_v    [64,64,4]
+decoder.layers.8.weight_v             [2,64,7]
+```
+
+普通 `Conv1d` 的权重布局为 `[out_channels,in_channels,kernel_size]`；所以首层把 `[B,64,T]` 的通道维映射到 2048，最后一层把 64 个特征通道变成左右两声道。
+
+中间使用 `ConvTranspose1d` 上采样，其权重布局为 `[in_channels,out_channels,kernel_size]`，与普通卷积前两维相反。不能把 `[2048,1024,12]` 当作一个 Linear 的 `[out,in]`。
+
+`weight_g`、`weight_v` 来自 weight normalization（权重归一化）：实际卷积权重由方向与尺度重建。header 里没有直接叫 `weight`，不表示卷积缺少权重。
+
+上采样块内部还有 Snake 激活和残差单元，因此“六个上采样块”不等于“整个 VAE 只有六层”。本节报块数，避免把 Transformer 层与卷积子层混着相加。
+
+### F. 磁盘名字怎样映射到实际模块
+
+[`partition_checkpoint_weights`](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/model_executor/models/yue2/yue2.py#L140) 把普通 AR 权重交给 vLLM loader，把 `nar_*` 和声学投影分到另一组。
+
+例如：
+
+```text
+checkpoint: model.layers.0.nar_self_attn.q_proj.weight
+runtime:    nar_layers.0.self_attn.q_proj.weight
+```
+
+规则是移除层内 `nar_` 前缀，并把顶层 `model.layers` 改为 `nar_layers`。不是重新训练了一个形状相似的网络。
+
+[`load_weights`](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/model_executor/models/yue2/yue2.py#L2136) 加载后检查缺失/意外参数，再调用 `fuse_nar_projections`。因此磁盘中的 q/k/v 三个矩阵在运行时可能合并；合并改变执行组织，不改变它们分别投影的含义。
+
+VAE 的 `from_pretrained` 以 `decoder_only=True` 只取 `decoder.*`，并要求导出 tensor 为 FP32、名称完整匹配，再拷入模型。checkpoint 还带 encoder，不代表每次生成都要先运行 encoder。
+
+现在再看下面的 pipeline，就能把每个箭头对应到具体矩阵与数据形状。
+
+
 ## 1. 从一首歌的三种描述开始
 
 假设你想生成一首轻快的中文流行歌，有歌词“风吹过站台，我还在等待”。可以描述它的方式有三种：
@@ -138,7 +292,7 @@ MoT 是 Mixture of Transformers。在这个实现里，可以从两条路径理�
 
 不能把 MoT 和 MoE 混为一谈。这里的名字不意味着 Drama 3 那样为每个 token 在许多稀疏专家间路由。
 
-本地配置默认隐藏维度 2048、28 层、16 个 query heads、8 个 KV heads、head dimension 128。AR 是 Qwen3-1.7B 形态，不代表整个 YuE2 只有一个 Qwen3-1.7B：另有 NAR 权重与相关头，模型名的 3B 也不应拿来当精确的推理显存估计。
+本次固定 checkpoint 的实际配置为隐藏维度 2048、28 层、16 个 query heads、8 个 KV heads、head dimension 128（见前置权重核对）。AR 是 Qwen3-1.7B 形态，不代表整个 YuE2 只有一个 Qwen3-1.7B：另有 NAR 权重与相关头，模型名的 3B 也不应拿来当精确的推理显存估计。
 
 ## 6. AR 为什么仍然需要一个一个生成
 

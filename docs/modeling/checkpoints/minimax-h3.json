@@ -1,0 +1,513 @@
+{
+  "repo": "MiniMaxAI/MiniMax-H3",
+  "revision": "42ed227ee7df40d41602854ae760620d6eb651fe",
+  "revision_source": "https://huggingface.co/api/models/MiniMaxAI/MiniMax-H3",
+  "checked_at": "2026-10-15",
+  "method": "Actual config JSON and HTTP Range safetensors header; no tensor data download.",
+  "configs": {
+    "FL2VA/text_encoder/config.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/text_encoder/config.json",
+      "values": {
+        "architectures": [
+          "Qwen3VLForConditionalGeneration"
+        ],
+        "image_token_id": 151655,
+        "model_type": "qwen3_vl",
+        "text_config": {
+          "attention_bias": false,
+          "attention_dropout": 0.0,
+          "bos_token_id": 151643,
+          "dtype": "bfloat16",
+          "eos_token_id": 151645,
+          "head_dim": 128,
+          "hidden_act": "silu",
+          "hidden_size": 5120,
+          "initializer_range": 0.02,
+          "intermediate_size": 25600,
+          "max_position_embeddings": 262144,
+          "model_type": "qwen3_vl_text",
+          "num_attention_heads": 64,
+          "num_hidden_layers": 64,
+          "num_key_value_heads": 8,
+          "rms_norm_eps": 1e-06,
+          "rope_scaling": {
+            "mrope_interleaved": true,
+            "mrope_section": [
+              24,
+              20,
+              20
+            ],
+            "rope_type": "default"
+          },
+          "rope_theta": 5000000,
+          "use_cache": true,
+          "vocab_size": 151936
+        },
+        "tie_word_embeddings": false,
+        "transformers_version": "4.57.0.dev0",
+        "video_token_id": 151656,
+        "vision_config": {
+          "deepstack_visual_indexes": [
+            8,
+            16,
+            24
+          ],
+          "depth": 27,
+          "hidden_act": "gelu_pytorch_tanh",
+          "hidden_size": 1152,
+          "in_channels": 3,
+          "initializer_range": 0.02,
+          "intermediate_size": 4304,
+          "model_type": "qwen3_vl",
+          "num_heads": 16,
+          "num_position_embeddings": 2304,
+          "out_hidden_size": 5120,
+          "patch_size": 16,
+          "spatial_merge_size": 2,
+          "temporal_patch_size": 2
+        },
+        "vision_end_token_id": 151653,
+        "vision_start_token_id": 151652
+      }
+    },
+    "FL2VA/transformer/config.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/transformer/config.json",
+      "values": {
+        "_class_name": "MiniMaxH3DiTModel",
+        "_diffusers_version": "0.32.2",
+        "hidden_size": 5376,
+        "num_layers": 50,
+        "token_refiner_num_layers": 2,
+        "num_attention_heads": 56,
+        "attention_head_dim": 128,
+        "ffn_hidden_size": 14336,
+        "latents_dim": 24,
+        "audio_latents_dim": 32,
+        "patch_size": [
+          1,
+          2,
+          2
+        ],
+        "text_dim": 5120,
+        "timestep_input_dim": 256,
+        "time_embed_hidden_size": 5376,
+        "time_embed_dim": 2688,
+        "adaln_out_features": 96768,
+        "final_adaln_out_features": 10752,
+        "rope_inv_freq_len": 16,
+        "norm_eps": 1e-05,
+        "qk_norm_eps": 1e-05,
+        "final_norm_eps": 1e-05
+      }
+    },
+    "FL2VA/video_vae/config.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/config.json",
+      "values": {
+        "_class_name": "MiniMaxH3VideoVAE",
+        "_diffusers_version": "0.32.2",
+        "mode": "standalone",
+        "auto_map": {
+          "AutoModel": "minimax_h3_video_vae.MiniMaxH3VideoVAE"
+        },
+        "source_path": "source",
+        "source_class_name": "AutoencoderKLLegacy",
+        "vae_clip_length": 17,
+        "vae_token_drop": 3,
+        "vae_encoder_tiling": 1,
+        "vae_decoder_tiling": 1,
+        "vae_parallel_tiling": 1,
+        "vae_tile_size": 256,
+        "vae_tile_overlap_min": 64,
+        "vae_encoder_parallel": 0,
+        "vae_decoder_parallel": 0,
+        "vae_chunk_dim": -1,
+        "source_safetensors_path": "model.safetensors",
+        "latent_channels": 24
+      }
+    },
+    "FL2VA/audio_vae/config.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/audio_vae/config.json",
+      "values": {
+        "_class_name": "MiniMaxH3AudioVAE",
+        "_diffusers_version": "0.32.2",
+        "auto_map": {
+          "AutoModel": "minimax_h3_audio_vae.MiniMaxH3AudioVAE"
+        },
+        "output_channel": 2,
+        "sample_rate": 32000,
+        "source_config_path": "config.yaml",
+        "source_safetensors_path": "model.safetensors",
+        "source_metadata_path": "metadata.json",
+        "latent_channels": 32
+      }
+    },
+    "Ref2VA/transformer/config.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/Ref2VA/transformer/config.json",
+      "values": {
+        "_class_name": "MiniMaxH3DiTModel",
+        "_diffusers_version": "0.32.2",
+        "hidden_size": 5376,
+        "num_layers": 50,
+        "token_refiner_num_layers": 2,
+        "num_attention_heads": 56,
+        "attention_head_dim": 128,
+        "ffn_hidden_size": 14336,
+        "latents_dim": 24,
+        "audio_latents_dim": 32,
+        "patch_size": [
+          1,
+          2,
+          2
+        ],
+        "text_dim": 5120,
+        "timestep_input_dim": 256,
+        "time_embed_hidden_size": 5376,
+        "time_embed_dim": 2688,
+        "adaln_out_features": 96768,
+        "final_adaln_out_features": 10752,
+        "rope_inv_freq_len": 16,
+        "norm_eps": 1e-05,
+        "qk_norm_eps": 1e-05,
+        "final_norm_eps": 1e-05
+      }
+    },
+    "FL2VA/video_vae/source/config.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/source/config.json",
+      "values": {
+        "_class_name": "AutoencoderKLLegacy",
+        "_diffusers_version": "0.32.2",
+        "causal_decoder": false,
+        "causal_encoder": true,
+        "ch": 128,
+        "ch_mult": [
+          1,
+          2,
+          2,
+          4,
+          4,
+          8
+        ],
+        "embed_dim": 24,
+        "in_channels": 3,
+        "num_res_blocks": 2,
+        "num_res_blocks_decoder": null,
+        "out_ch": 3,
+        "padding_mode": "reflect",
+        "padding_mode_t": null,
+        "pixel_norm_type": "imagenet",
+        "scaling_factor": 1.0,
+        "shift_factor": 0.0,
+        "space_down": [
+          2,
+          2,
+          2,
+          2,
+          1,
+          1
+        ],
+        "space_up": [
+          1,
+          2,
+          2,
+          2,
+          2,
+          1
+        ],
+        "time_down": [
+          1,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "time_up": null,
+        "use_3d_conv": true,
+        "use_t_isolated_gn": true,
+        "use_vit_decoder": true,
+        "vae_ratio": 16,
+        "vae_ratio_t": 4,
+        "vit_decoder_kwargs": {
+          "dim_head": 64,
+          "ffn_activation_fn": "silu",
+          "ffn_use_gated": true,
+          "heads": 32,
+          "norm_affine": true,
+          "norm_type": "rms_norm",
+          "num_layers": 36,
+          "qk_norm_affine": false,
+          "qk_norm_type": "rms_norm",
+          "rope_dim_ratio": 0.75,
+          "rope_theta": 100.0
+        },
+        "z_channels": 24,
+        "zq_ch_decoder": null,
+        "zq_ch_encoder": null
+      }
+    },
+    "FL2VA/audio_vae/metadata.json": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/audio_vae/metadata.json",
+      "values": {
+        "metadata": {
+          "kwargs": {
+            "attn_proj": true,
+            "decoder_dim": 1024,
+            "decoder_rates": [
+              5,
+              5,
+              2,
+              2,
+              2,
+              2,
+              2
+            ],
+            "decoder_type": "bigvgan",
+            "encoder_dim": 64,
+            "encoder_rates": [
+              2,
+              4,
+              4,
+              5,
+              5
+            ],
+            "latent_dim": 2048,
+            "sample_rate": 32000,
+            "vae_latent_channels": 32
+          }
+        }
+      }
+    },
+    "FL2VA/audio_vae/config.yaml": {
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/audio_vae/config.yaml",
+      "values": {
+        "model_config": {
+          "sr": 32000,
+          "decoder_dim": 1024,
+          "audio_channel": 1,
+          "vae_latent_channels": 32
+        }
+      },
+      "verification": "Directly read YAML; transcribed model_config fields."
+    }
+  },
+  "tensor_headers": [
+    {
+      "file": "FL2VA/text_encoder/model-00001-of-00014.safetensors",
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/resolve/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/text_encoder/model-00001-of-00014.safetensors",
+      "method": "HTTP Range first 8 bytes interpreted as little-endian uint64 length n, then bytes 8 through 7+n; header JSON only.",
+      "tensors": {
+        "model.language_model.embed_tokens.weight": {
+          "shape": [
+            151936,
+            5120
+          ],
+          "dtype": "BF16"
+        },
+        "model.language_model.layers.0.self_attn.q_proj.weight": {
+          "shape": [
+            8192,
+            5120
+          ],
+          "dtype": "BF16"
+        },
+        "model.language_model.layers.0.self_attn.k_proj.weight": {
+          "shape": [
+            1024,
+            5120
+          ],
+          "dtype": "BF16"
+        },
+        "model.language_model.layers.0.self_attn.v_proj.weight": {
+          "shape": [
+            1024,
+            5120
+          ],
+          "dtype": "BF16"
+        },
+        "model.language_model.layers.0.self_attn.o_proj.weight": {
+          "shape": [
+            5120,
+            8192
+          ],
+          "dtype": "BF16"
+        },
+        "model.language_model.layers.0.mlp.gate_proj.weight": {
+          "shape": [
+            25600,
+            5120
+          ],
+          "dtype": "BF16"
+        }
+      }
+    },
+    {
+      "file": "FL2VA/transformer/model-00001-of-00013.safetensors",
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/resolve/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/transformer/model-00001-of-00013.safetensors",
+      "method": "HTTP Range first 8 bytes interpreted as little-endian uint64 length n, then bytes 8 through 7+n; header JSON only.",
+      "tensors": {
+        "video_patch_proj.weight": {
+          "shape": [
+            5376,
+            96
+          ],
+          "dtype": "F32"
+        },
+        "audio_patch_proj.weight": {
+          "shape": [
+            5376,
+            32
+          ],
+          "dtype": "F32"
+        },
+        "condition_proj.weight": {
+          "shape": [
+            5376,
+            5120
+          ],
+          "dtype": "BF16"
+        },
+        "blocks.0.attn.qkv_proj.weight": {
+          "shape": [
+            21504,
+            5376
+          ],
+          "dtype": "BF16"
+        },
+        "blocks.0.attn.out_proj.weight": {
+          "shape": [
+            5376,
+            7168
+          ],
+          "dtype": "BF16"
+        },
+        "blocks.0.mlp.fc1.weight": {
+          "shape": [
+            28672,
+            5376
+          ],
+          "dtype": "BF16"
+        },
+        "blocks.0.mlp.fc2.weight": {
+          "shape": [
+            5376,
+            14336
+          ],
+          "dtype": "BF16"
+        },
+        "blocks.0.adaln_proj.linear.weight": {
+          "shape": [
+            96768,
+            2688
+          ],
+          "dtype": "BF16"
+        }
+      }
+    },
+    {
+      "file": "FL2VA/transformer/model-00013-of-00013.safetensors",
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/resolve/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/transformer/model-00013-of-00013.safetensors",
+      "method": "HTTP Range first 8 bytes interpreted as little-endian uint64 length n, then bytes 8 through 7+n; header JSON only.",
+      "tensors": {
+        "final_layer.video_out.weight": {
+          "shape": [
+            96,
+            5376
+          ],
+          "dtype": "F32"
+        },
+        "final_layer.audio_out.weight": {
+          "shape": [
+            32,
+            5376
+          ],
+          "dtype": "F32"
+        }
+      }
+    },
+    {
+      "file": "FL2VA/video_vae/source/model.safetensors",
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/resolve/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/source/model.safetensors",
+      "method": "HTTP Range first 8 bytes as uint64 header length, then exact JSON header bytes only.",
+      "tensors": {
+        "encoder.conv_in.weight": {
+          "shape": [
+            128,
+            3,
+            3,
+            3,
+            3
+          ],
+          "dtype": "F32"
+        },
+        "encoder.conv_out.weight": {
+          "shape": [
+            48,
+            1024,
+            3,
+            3,
+            3
+          ],
+          "dtype": "F32"
+        },
+        "decoder.x_embedder.weight": {
+          "shape": [
+            2048,
+            24
+          ],
+          "dtype": "F32"
+        },
+        "decoder.proj_out.weight": {
+          "shape": [
+            3072,
+            2048
+          ],
+          "dtype": "F32"
+        }
+      }
+    },
+    {
+      "file": "FL2VA/audio_vae/model.safetensors",
+      "source": "https://huggingface.co/MiniMaxAI/MiniMax-H3/resolve/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/audio_vae/model.safetensors",
+      "method": "HTTP Range first 8 bytes as uint64 header length, then exact JSON header bytes only.",
+      "tensors": {
+        "encoder.block.0.weight_v": {
+          "shape": [
+            64,
+            1,
+            7
+          ],
+          "dtype": "F32"
+        },
+        "mean_proj.weight": {
+          "shape": [
+            32,
+            32,
+            1
+          ],
+          "dtype": "F32"
+        },
+        "dec_in_proj.weight": {
+          "shape": [
+            2048,
+            32,
+            1
+          ],
+          "dtype": "F32"
+        },
+        "decoder.conv_post.weight_v": {
+          "shape": [
+            1,
+            8,
+            7
+          ],
+          "dtype": "F32"
+        }
+      }
+    }
+  ],
+  "scope": "Representative tensor headers and config fields; not a full checkpoint inventory, weight-content hash check, or executed model forward.",
+  "structure_sources": [
+    "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/klvae.py",
+    "https://huggingface.co/MiniMaxAI/MiniMax-H3/raw/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/vae_vit.py"
+  ]
+}

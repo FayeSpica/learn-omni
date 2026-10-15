@@ -10,6 +10,169 @@ MiniMax Music 3 把这两个时间尺度拆开：大模型沿歌曲时间前进�
     官方模型卡用于核对模型设计，具体调度、分块与优化以本快照源码为准。
     本篇未运行真实权重生成，也不报告实测性能。源码实现、部署默认值与官方框架支持范围分别说明。
 
+## 0. 从 checkpoint 到模型结构：读真实层数与权重 shape
+
+### 0.1 固定版本，而不是只读模型名称
+
+本节核对官方仓库 `MiniMaxAI/MiniMax-Music3` 的固定 revision
+[`fbdf52fbaaca799592917417eb05f1899f1255ec`](https://huggingface.co/MiniMaxAI/MiniMax-Music3/tree/fbdf52fbaaca799592917417eb05f1899f1255ec)。
+我们实际读取 config JSON 和代表性 safetensors 的头部，没有下载大张量，也没有运行模型。
+[精简证据记录](checkpoints/minimax-music3.json) 保存配置来源、参数名、shape 和存储 dtype。
+
+下文 **[配置]** 指真实发布 JSON，**[头部]** 指实读 safetensors 元数据，**[推导]** 指据此计算的 forward 形状。
+这三者都不等于实测推理性能。
+
+```text
+MiniMax-Music3/
+├── config.json                         复合模型入口，不含全部结构参数
+├── language_model/
+│   ├── config.json                     Qwen3 Global backbone
+│   ├── model-00001-of-00004.safetensors …
+│   └── model.safetensors.index.json
+├── rvq_depth_decoder/
+│   ├── config.json                     Local depth decoder
+│   └── diffusion_pytorch_model.safetensors
+├── condition_encoder/config.json、diffusion_pytorch_model.safetensors
+├── transformer/
+│   ├── config.json                     声学Flow Matching DiT
+│   ├── diffusion_pytorch_model-00001-of-00002.safetensors …
+│   └── diffusion_pytorch_model.safetensors.index.json
+├── vocoder/config.json、diffusion_pytorch_model.safetensors
+└── tokenizer/、qwen_7B/ …
+```
+
+根 `config.json` 只声明复合架构与 `model_type`，不能从它直接得出所有组件的层数。
+此版本同时保留 `qwen_7B/` 参考实现布局；Omni 的 Global 权重从 `language_model/` 加载，本文使用这套路径。
+4 个 Global 分片与 2 个 DiT 分片是存储划分，分别不等于 4 层和 2 层网络。
+
+### 0.2 Global：36 层 Qwen3，先把 GQA 对上
+
+[配置] `language_model/config.json` 的实际字段：
+
+```text
+num_hidden_layers = 36         hidden_size = 4096
+num_attention_heads = 32       num_key_value_heads = 8
+head_dim = 128                intermediate_size = 12288
+vocab_size = 200000           max_position_embeddings = 10240
+```
+
+[头部] 代表性参数如下，前六项来自第 1 分片，最后一项来自第 4 分片：
+
+```text
+model.embed_tokens.weight                  [200000,4096] BF16
+model.layers.0.self_attn.q_proj.weight      [4096,4096]   BF16
+model.layers.0.self_attn.k_proj.weight      [1024,4096]   BF16
+model.layers.0.self_attn.v_proj.weight      [1024,4096]   BF16
+model.layers.0.mlp.gate_proj.weight         [12288,4096]  BF16
+model.layers.0.mlp.down_proj.weight         [4096,12288]  BF16
+lm_head.weight                             [200000,4096] BF16
+```
+
+[推导] token id `[B,L]` 查 embedding 后得到 `[B,L,4096]`。
+一个 block 中 Q 变为 `[B,L,32,128]`，K/V 各为 `[B,L,8,128]`；这是 32Q/8KV 的 grouped-query attention。
+SwiGLU MLP 的 gate/up 各投影到 12288，经门控后由 down projection 回到 4096。
+最终 `lm_head` 从 `[B,4096]` 的当前状态产生 `[B,200000]` 的词表 logits。
+
+但 `c0` 的合法音乐码只有 16384 项，**不能把整个 200000 词表都当成 c0 码本**。
+模型 sampler 还要做特殊 token 处理、音乐码范围限制、CFG 和 top-k。
+词表规模、某个子码本规模和最终声学维度，是三种不同概念。
+
+### 0.3 Local：4 层，head_dim 为 256 而非 Global 的 128
+
+[配置] `rvq_depth_decoder/config.json` 给出：
+
+```text
+num_layers = 4               hidden_size = 4096
+num_attention_heads = 16     intermediate_size = 6144
+max_position_embeddings = 16
+num_codebooks = 8            audio_vocab_size = 1024
+```
+
+此处没有单独的 `head_dim` 字段；按模块的 `hidden_size // num_heads` **推导**得到 $4096/16=256$。
+Global 的 head_dim=128、Local 的 256 与后面 DiT 的 64，不能混用。
+
+[头部] Local 单文件中读到：
+
+```text
+audio_embeddings.weight          [7168,4096] BF16
+pos_embedding.weight             [16,4096]   BF16
+layers.0.attn.to_q.weight         [4096,4096] BF16
+layers.0.attn.to_k.weight         [4096,4096] BF16
+layers.0.attn.to_v.weight         [4096,4096] BF16
+layers.0.gate_proj.weight         [6144,4096] BF16
+audio_heads.0.weight             [1024,4096] BF16
+```
+
+$7168=7\times1024$，表示后七个码本各自有 embedding 区间；不是第一个 16384 码本被缩小了。
+7 个 `audio_heads.0` 到 `.6` 分别负责七个后续码本的 1024 类预测。
+16 个位置 embedding 是帧内短序列的位置表，不是只能生成 16 帧音乐。
+
+[推导] 对当前长度为 $K$ 的帧内序列，Local 输入是 `[B,K,4096]`。
+Q/K/V 各为 `[B,K,16,256]`，注意力后仍回到 `[B,K,4096]`；当前码本 head 输出 `[B,1024]`。
+$K$ 是当前一帧内部的已生成深度位置，歌曲时间长度则由 Global 的 $L$ 表示。
+
+### 0.4 条件编码器：32768 不是直接塞进 2048 的黑盒
+
+[配置] `condition_encoder/config.json` 给出 8 个 condition layers、每层 hidden 4096、输出 2048。
+[头部] `layer_weight_logits=[8]`，`layer_scale=[1]`，`proj.weight=[2048,4096,3]`，均为 F32。
+
+[推导] 一窗 hidden 输入 `[B,F,32768]`，其中 $32768=8\times4096$。
+Omni 先重排为 `[B,8,4096,F]`，对 8 路 hidden 进行学习到的加权融合，再得到 `[B,4096,F]`。
+随后 kernel size 3 的 Conv1d 投影到 `[B,2048,F]`，再对齐到声学 latent 的时间网格。
+这解释了为什么“拼接了八路 hidden”不意味着后面每层都以 32768 作为 hidden size。
+
+### 0.5 声学 DiT：另一个 36 层网络，不是再次运行 Qwen3
+
+[配置] `transformer/config.json` 给出 `num_layers=36`、`num_attention_heads=32`、`attention_head_dim=64`、`ff_inner_dim=8192`、`condition_dim=2048`、`in_channels=128`。
+因此其 attention 工作宽度 **推导**为 $32\times64=2048$。
+它与 Global 恰好都为 36 层，但权重、输入和运算任务不同。
+
+[头部] 第一个声学 DiT 分片包含：
+
+```text
+proj_in.weight                                [2048,2304]   F32
+transformer_blocks.0.attn.to_q.weight           [2048,2048]   F32
+transformer_blocks.0.ff_in.weight               [16384,2048]  F32
+transformer_blocks.0.ff_out.weight              [2048,8192]   F32
+```
+
+$2304=128+128+2048$：当前 latent、一块同宽的零占位与对齐条件拼成输入。
+`ff_in` 两半形成 value/gate，门控后宽度 8192，再由 `ff_out` 回到 2048。
+因此 config 的 `in_channels=128` 指声学 latent 宽，不意味着 `proj_in` 的输入矩阵必须只有 128 列。
+
+[推导] 200 帧窗口经时间对齐得到 689 个 latent 位置时：
+
+```text
+AR hidden                    [B,200,32768]
+条件融合与对齐                 [B,2048,689]
+当前声学latent                [B,128,689]
+拼接与换轴                    [B,689,2304]
+proj_in                      [B,689,2048]
+前置1个timestep embedding     [B,690,2048]
+36层DiT后移除时间位置           [B,689,2048]
+声学速度输出                   [B,128,689]
+```
+
+拼接输入还会先经过 2304 通道的 `preprocess_conv` 与残差相加；输出投影后也有卷积与残差，均不改变时间长度。
+690 而非 689 是这次主 Transformer 内部的序列长度，因为 timestep 作为一个前置位置参与注意力。
+689 是该窗口声学 latent 长度的推导结果，不是所有请求固定的音频长度。
+CFG 会进一步形成条件/无条件计算分支，所以上图的 $B$ 还要结合 solver 实际组批理解。
+
+### 0.6 Vocoder 与权重加载：把矩阵送到正确位置
+
+[配置] `vocoder/config.json` 给出 latent channels 128、decoder input 1024、hidden 1536、upsampling ratios `[8,8,4,2]`、内部采样率 44100。
+[头部] `dec_in_proj.weight=[1024,64,1]`，不是 `[1024,128,1]`。
+原因是立体声 128 通道先拆成两个 64 通道流，沿 batch 维一起解码：`[B,128,T] → [2B,64,T]`。
+四段上采样乘积为 $8\times8\times4\times2=512$，对应每个 latent 位置生成 512 个内部波形采样。
+
+加载时 Global 使用 vLLM `AutoWeightsLoader`，按 Qwen3 参数映射与 TP 分片规则装入。
+Local 的 `attn.to_q/to_k/to_v` 在 `RVQDepthDecoder.load_checkpoint_state` 沿输出轴拼成 `[12288,4096]` 的融合 QKV，顺序为 Q、K、V。
+声学 DiT 的 `remap_transformer_state` 同样把三份 `[2048,2048]` 拼成 `[6144,2048]`，并去掉 `to_out.0` 中表示列表的 `.0`。
+
+Vocoder 原权重使用 `weight_g/weight_v` 参数化，加载完成后 `remove_weight_norm` 把它们折叠成推理需要的卷积权重。
+例如转置卷积 `blocks.0.conv_t1.weight_v=[1536,768,16]` 的维度约定不同于 Linear，不能一律按 `[out,in]` 解读。
+组件 loader 会核对缺失键与 shape；外部名字对上了，不代表可以忽略 QKV 顺序、FFN 两半的顺序或 stereo reshape。
+
 ## 1. 一个初学者容易误判的问题
 
 给模型一段歌词：

@@ -11,6 +11,38 @@ tags:
 
 你不需要先读完所有源码。每篇先跟着一个小例子走通输入和输出，再逐层认识张量、生成循环、缓存和优化。
 
+## 先从权重认识模型的骨架
+
+一份 checkpoint 不只是一个“大文件”。读它时，先把三种信息对上：
+
+1. **配置**说明要创建什么模块：例如多少层、隐藏维度多大、注意力头数多少。复合模型可能有多个子目录和配置。
+2. **权重**保存训练得到的张量：名称指向模块，shape 说明参数如何连接，dtype 说明保存精度。分片索引中的 `weight_map` 只告诉你张量在哪个文件，不直接给出 shape。
+3. **执行代码**说明模块怎样使用这些参数：哪些层重复调用、哪些权重融合、哪些状态在一次请求中保留。
+
+例如，以下是一组**教学用的假设值**，不是这五个模型中某个 checkpoint 的实测配置：
+
+```text
+config: hidden_size=2048, intermediate_size=8192, num_hidden_layers=28
+
+model.layers.0.mlp.up_proj.weight    [8192, 2048]
+model.layers.0.mlp.down_proj.weight  [2048, 8192]
+...
+model.layers.27.*                   第 28 个 block 的参数
+```
+
+PyTorch 的普通 Linear 权重按 `[输出维度, 输入维度]` 保存。
+若输入 `X` 为 `[B,S,2048]`，`up_proj` 做的就是 `X @ W.T`，输出为 `[B,S,8192]`；`down_proj` 再将最后一维变回 2048。`B` 是 batch 大小，`S` 是当前处理的序列长度。两个维度由请求决定，不会出现在这个二维权重的 shape 中。
+
+“28 层”通常指重复 28 次 Transformer block，不表示模型只有 28 个权重矩阵。每个 block 还包含注意力投影、前馈网络和归一化等参数。多头注意力还可能把投影结果拆成 `[B,S,头数,每头维度]`；GQA 的 Q 头数与 KV 头数可以不同，所以 Q/K/V 权重也不一定同形。
+
+也不要默认 `hidden_size = 头数 × head_dim`。注意力可以先将残差流投影到另一种宽度，再由输出投影变回隐藏维度；某些模型的投影还额外带门控向量。这些差别需要联合核对配置、真实权重 shape 和 forward 中的拆分操作。
+
+权重文件里的存储布局也可能和运行时不同：加载器可以把 Q/K/V 合并、将矩阵分给多张卡，或把量化整数与 scale 交给专门内核。因此每篇新增的权重说明都会沿着 **文件 → 配置 → 真实张量 → 加载映射 → forward shape** 往下走，不只列模型的参数量。
+
+Safetensors 的头部记录张量名称、dtype、shape 和数据偏移；读取这些元数据不需要将完整模型加载到 GPU。本组文章提供精简的核对记录，并区分“从实际权重头读取”“从实际配置读取”和“按公式推导”。记录不包含权重数值，也不代表已经运行过模型。
+
+格式与约定可对照 [Safetensors 官方文档](https://huggingface.co/docs/safetensors/index)、[PyTorch Linear](https://docs.pytorch.org/docs/stable/generated/torch.nn.Linear.html) 与 [HF 分片索引说明](https://huggingface.co/docs/transformers/main/en/big_models#shard-metadata)。
+
 ## 先选一篇
 
 - **[Qwen3-TTS：从权重到语音](qwen3_tts_infer_flow.md)**：从 checkpoint 加载、Talker、CodePredictor、Code2Wav，认识分层语音生成与流式状态。适合先建立语音模型的整体图。

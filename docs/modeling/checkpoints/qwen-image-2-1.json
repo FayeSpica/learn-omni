@@ -1,0 +1,499 @@
+{
+  "model_id": "Qwen/Qwen-Image-2.1",
+  "revision": "d26bb61231c349cf6b7896fa83353113880e1ba3",
+  "observed_date": "2026-10-15",
+  "omni_revision": "910b8f07d23c7f387729173333c9d5f927dc6c4f",
+  "scope": "Metadata verification only; no model weights loaded, tensor payloads downloaded, inference or benchmark executed.",
+  "repository_files": [
+    ".gitattributes",
+    "LICENSE",
+    "README.md",
+    "assets/qr.png",
+    "model_index.json",
+    "processor/added_tokens.json",
+    "processor/chat_template.jinja",
+    "processor/merges.txt",
+    "processor/preprocessor_config.json",
+    "processor/special_tokens_map.json",
+    "processor/tokenizer.json",
+    "processor/tokenizer_config.json",
+    "processor/video_preprocessor_config.json",
+    "processor/vocab.json",
+    "scheduler/scheduler_config.json",
+    "text_encoder/config.json",
+    "text_encoder/generation_config.json",
+    "text_encoder/model-00001-of-00004.safetensors",
+    "text_encoder/model-00002-of-00004.safetensors",
+    "text_encoder/model-00003-of-00004.safetensors",
+    "text_encoder/model-00004-of-00004.safetensors",
+    "text_encoder/model.safetensors.index.json",
+    "transformer/config.json",
+    "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+    "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+    "transformer/diffusion_pytorch_model.safetensors.index.json",
+    "vae/config.json",
+    "vae/diffusion_pytorch_model.safetensors"
+  ],
+  "configs": {
+    "model_index.json": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/model_index.json",
+      "values": {
+        "_class_name": "QwenImage21Pipeline",
+        "_diffusers_version": "0.37.0.dev0",
+        "processor": [
+          "transformers",
+          "Qwen3VLProcessor"
+        ],
+        "scheduler": [
+          "diffusers",
+          "FlowMatchEulerDiscreteScheduler"
+        ],
+        "text_encoder": [
+          "transformers",
+          "Qwen3VLForConditionalGeneration"
+        ],
+        "transformer": [
+          "diffusers",
+          "QwenImage21Transformer2DModel"
+        ],
+        "vae": [
+          "diffusers",
+          "AutoencoderKLQwenImage21"
+        ]
+      }
+    },
+    "transformer/config.json": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/transformer/config.json",
+      "values": {
+        "_class_name": "QwenImage21Transformer2DModel",
+        "_diffusers_version": "0.37.0.dev0",
+        "attention_head_dim": 128,
+        "axes_dims_rope": [
+          16,
+          56,
+          56
+        ],
+        "context_in_dim": 4096,
+        "in_channels": 64,
+        "num_attention_heads": 32,
+        "num_layers": 32,
+        "out_channels": 64,
+        "patch_size": 1,
+        "mlp_ratio": 3,
+        "eps": 1e-06,
+        "causal_condition": true
+      }
+    },
+    "text_encoder/config.json": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/text_encoder/config.json",
+      "values": {
+        "architectures": [
+          "Qwen3VLForConditionalGeneration"
+        ],
+        "dtype": "bfloat16",
+        "image_token_id": 151655,
+        "model_type": "qwen3_vl",
+        "text_config": {
+          "attention_bias": false,
+          "attention_dropout": 0.0,
+          "bos_token_id": 151643,
+          "dtype": "bfloat16",
+          "eos_token_id": 151645,
+          "head_dim": 128,
+          "hidden_act": "silu",
+          "hidden_size": 4096,
+          "initializer_range": 0.02,
+          "intermediate_size": 12288,
+          "max_position_embeddings": 262144,
+          "model_type": "qwen3_vl_text",
+          "num_attention_heads": 32,
+          "num_hidden_layers": 36,
+          "num_key_value_heads": 8,
+          "rms_norm_eps": 1e-06,
+          "rope_scaling": {
+            "mrope_interleaved": true,
+            "mrope_section": [
+              24,
+              20,
+              20
+            ],
+            "rope_type": "default"
+          },
+          "rope_theta": 5000000,
+          "use_cache": true,
+          "vocab_size": 151936
+        },
+        "tie_word_embeddings": false,
+        "transformers_version": "4.57.1",
+        "video_token_id": 151656,
+        "vision_config": {
+          "deepstack_visual_indexes": [
+            8,
+            16,
+            24
+          ],
+          "depth": 27,
+          "dtype": "bfloat16",
+          "hidden_act": "gelu_pytorch_tanh",
+          "hidden_size": 1152,
+          "in_channels": 3,
+          "initializer_range": 0.02,
+          "intermediate_size": 4304,
+          "model_type": "qwen3_vl",
+          "num_heads": 16,
+          "num_position_embeddings": 2304,
+          "out_hidden_size": 4096,
+          "patch_size": 16,
+          "spatial_merge_size": 2,
+          "temporal_patch_size": 2
+        },
+        "vision_end_token_id": 151653,
+        "vision_start_token_id": 151652
+      }
+    },
+    "vae/config.json": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/vae/config.json",
+      "values": {
+        "_class_name": "AutoencoderKLQwenImage21",
+        "_diffusers_version": "0.37.0.dev0",
+        "attn_scales": [],
+        "base_dim": 96,
+        "decoder_base_dim": 144,
+        "dim_mult": [
+          1,
+          2,
+          4,
+          8,
+          8
+        ],
+        "dropout": 0.0,
+        "in_channels": 4,
+        "is_residual": true,
+        "num_res_blocks": 2,
+        "out_channels": 4,
+        "patch_size": null,
+        "scale_factor_spatial": 16,
+        "scale_factor_temporal": 8,
+        "temperal_downsample": [
+          false,
+          true,
+          true,
+          true
+        ],
+        "z_dim": 64,
+        "latents_mean_length": 64,
+        "latents_std_length": 64
+      }
+    },
+    "scheduler/scheduler_config.json": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/scheduler/scheduler_config.json",
+      "values": {
+        "_class_name": "FlowMatchEulerDiscreteScheduler",
+        "_diffusers_version": "0.37.0.dev0",
+        "base_image_seq_len": 256,
+        "base_shift": 0.5,
+        "invert_sigmas": false,
+        "max_image_seq_len": 8192,
+        "max_shift": 0.9,
+        "num_train_timesteps": 1000,
+        "shift": 1.0,
+        "shift_terminal": 0.02,
+        "stochastic_sampling": false,
+        "time_shift_type": "exponential",
+        "use_beta_sigmas": false,
+        "use_dynamic_shifting": true,
+        "use_exponential_sigmas": false,
+        "use_karras_sigmas": false
+      }
+    }
+  },
+  "headers": [
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "method": "HTTP Range 0-7 for little-endian uint64 header length; then 8-(7+header_bytes); server HTTP 206 verified, exact byte length checked; tensor payload not read",
+      "header_bytes": 24784,
+      "content_ranges": [
+        "bytes 0-7/9968332504",
+        "bytes 8-24791/9968332504"
+      ]
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+      "method": "HTTP Range 0-7 for little-endian uint64 header length; then 8-(7+header_bytes); server HTTP 206 verified, exact byte length checked; tensor payload not read",
+      "header_bytes": 10136,
+      "content_ranges": [
+        "bytes 0-7/4261951904",
+        "bytes 8-10143/4261951904"
+      ]
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/text_encoder/model-00001-of-00004.safetensors",
+      "method": "HTTP Range 0-7 for little-endian uint64 header length; then 8-(7+header_bytes); server HTTP 206 verified, exact byte length checked; tensor payload not read",
+      "header_bytes": 49792,
+      "content_ranges": [
+        "bytes 0-7/4998056552",
+        "bytes 8-49799/4998056552"
+      ]
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/vae/diffusion_pytorch_model.safetensors",
+      "method": "HTTP Range 0-7 for little-endian uint64 header length; then 8-(7+header_bytes); server HTTP 206 verified, exact byte length checked; tensor payload not read",
+      "header_bytes": 27888,
+      "content_ranges": [
+        "bytes 0-7/1350989512",
+        "bytes 8-27895/1350989512"
+      ]
+    }
+  ],
+  "selected_tensors": [
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "img_in.weight",
+      "shape": [
+        4096,
+        64
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.attn.to_q.weight",
+      "shape": [
+        4096,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.attn.to_k.weight",
+      "shape": [
+        4096,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.attn.to_v.weight",
+      "shape": [
+        4096,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.attn.to_out.0.weight",
+      "shape": [
+        4096,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.img_mlp.gate_layer.weight",
+      "shape": [
+        12288,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.img_mlp.proj.weight",
+      "shape": [
+        12288,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+      "name": "transformer_blocks.0.img_mlp.out.weight",
+      "shape": [
+        4096,
+        12288
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+      "name": "proj_out.weight",
+      "shape": [
+        64,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.language_model.layers.0.self_attn.q_proj.weight",
+      "shape": [
+        4096,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.language_model.layers.0.self_attn.k_proj.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.language_model.layers.0.self_attn.v_proj.weight",
+      "shape": [
+        1024,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.language_model.layers.0.mlp.up_proj.weight",
+      "shape": [
+        12288,
+        4096
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.visual.blocks.0.attn.qkv.weight",
+      "shape": [
+        3456,
+        1152
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.visual.blocks.0.mlp.linear_fc1.weight",
+      "shape": [
+        4304,
+        1152
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "text_encoder/model-00001-of-00004.safetensors",
+      "name": "model.visual.patch_embed.proj.weight",
+      "shape": [
+        1152,
+        3,
+        2,
+        16,
+        16
+      ],
+      "dtype": "BF16"
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "name": "encoder.conv_in.weight",
+      "shape": [
+        96,
+        4,
+        3,
+        3
+      ],
+      "dtype": "F32"
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "name": "encoder.conv_out.weight",
+      "shape": [
+        128,
+        768,
+        3,
+        3
+      ],
+      "dtype": "F32"
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "name": "decoder.conv_in.weight",
+      "shape": [
+        1152,
+        64,
+        3,
+        3
+      ],
+      "dtype": "F32"
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "name": "decoder.conv_out.weight",
+      "shape": [
+        4,
+        144,
+        3,
+        3
+      ],
+      "dtype": "F32"
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "name": "quant_conv.weight",
+      "shape": [
+        128,
+        128,
+        1,
+        1
+      ],
+      "dtype": "F32"
+    },
+    {
+      "file": "vae/diffusion_pytorch_model.safetensors",
+      "name": "post_quant_conv.weight",
+      "shape": [
+        64,
+        64,
+        1,
+        1
+      ],
+      "dtype": "F32"
+    }
+  ],
+  "index_files": [
+    {
+      "file": "transformer/diffusion_pytorch_model.safetensors.index.json",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/transformer/diffusion_pytorch_model.safetensors.index.json",
+      "weight_count": 297
+    },
+    {
+      "file": "text_encoder/model.safetensors.index.json",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/resolve/d26bb61231c349cf6b7896fa83353113880e1ba3/text_encoder/model.safetensors.index.json",
+      "weight_count": 750
+    }
+  ],
+  "index_layer_checks": {
+    "dit": {
+      "layer_count": 32,
+      "first_layer": 0,
+      "last_layer": 31,
+      "source": "transformer/diffusion_pytorch_model.safetensors.index.json"
+    },
+    "vlm_text": {
+      "layer_count": 36,
+      "first_layer": 0,
+      "last_layer": 35,
+      "source": "text_encoder/model.safetensors.index.json"
+    },
+    "vlm_vision": {
+      "layer_count": 27,
+      "first_layer": 0,
+      "last_layer": 26,
+      "source": "text_encoder/model.safetensors.index.json"
+    }
+  }
+}

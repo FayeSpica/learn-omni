@@ -67,22 +67,180 @@ VLM 路径提供理解图像的条件表示；VAE 路径提供图像在生成空
 显存预算还要考虑条件编码器、VAE、激活、KV cache 和执行工作区。
 这些官方结构信息见 [官方 Architecture](https://github.com/QwenLM/Qwen-Image-2.1#architecture)。
 
-当前实现的 `QwenImage21Transformer2DModel.__init__` 默认参数包括：
+### 2.2 先打开真实 checkpoint，而不是猜模型有多少层
 
-```python
-patch_size = 1
-in_channels = 64
-num_layers = 32
-num_attention_heads = 32
-attention_head_dim = 128
-context_in_dim = 4096
-causal_condition = True
-causal_block = True
+本节固定的是 `Qwen/Qwen-Image-2.1` 的 Hugging Face revision：
+
+```text
+d26bb61231c349cf6b7896fa83353113880e1ba3
 ```
 
-所以默认内部宽度为 `32 × 128 = 4096`。
-这些是构造函数默认值；加载具体 checkpoint 时仍需读其配置，不能把默认值当成所有变体的事实。
-[源码：Transformer 构造函数](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/diffusion/models/qwen_image_21/qwen_image_21_transformer.py#L857)
+[固定版本文件树](https://huggingface.co/Qwen/Qwen-Image-2.1/tree/d26bb61231c349cf6b7896fa83353113880e1ba3) 中与结构直接相关的文件如下。
+下面的树省略许可证、示例图片和部分 tokenizer 辅助文件，分片数与文件名来自该 revision 的实际列表。
+
+```text
+Qwen-Image-2.1/
+├── model_index.json
+├── transformer/
+│   ├── config.json
+│   ├── diffusion_pytorch_model.safetensors.index.json
+│   ├── diffusion_pytorch_model-00001-of-00002.safetensors
+│   └── diffusion_pytorch_model-00002-of-00002.safetensors
+├── text_encoder/
+│   ├── config.json
+│   ├── generation_config.json
+│   ├── model.safetensors.index.json
+│   └── model-00001-of-00004.safetensors  …  model-00004-of-00004.safetensors
+├── vae/
+│   ├── config.json
+│   └── diffusion_pytorch_model.safetensors
+├── processor/
+│   ├── tokenizer.json
+│   ├── tokenizer_config.json
+│   ├── preprocessor_config.json
+│   └── video_preprocessor_config.json
+└── scheduler/
+    └── scheduler_config.json
+```
+
+先读 `model_index.json`，它给出了组件名与类的对应关系：
+`transformer → QwenImage21Transformer2DModel`，`text_encoder → Qwen3VLForConditionalGeneration`，`vae → AutoencoderKLQwenImage21`。
+另外两项是 `Qwen3VLProcessor` 与 `FlowMatchEulerDiscreteScheduler`。
+processor 整理输入，scheduler 更新采样状态；它们没有这里列出的神经网络权重分片。
+
+然后读 `*.safetensors.index.json`：它的 `weight_map` 把**每个参数名映射到所在分片**。
+分成两个文件，不表示有两个 DiT；一个文件里也可能同时出现多层的参数。
+配置回答“应该建什么网络”，索引回答“这块参数在哪个文件”，header 回答“文件实际声明的张量有多大”。
+
+### 2.3 三套网络各有多少层、多宽
+
+以下数值来自上述固定 revision 的 config；不是从 Omni 构造函数默认值倒推。
+完整来源与精选 header 条目保存在 [checkpoint 核对记录](checkpoints/qwen-image-2-1.json)。
+两个索引文件的真实参数名也分别覆盖 DiT block `0…31`、语言层 `0…35` 和视觉 block `0…26`，与下面的 32／36／27 层配置相互印证。
+
+**生成 DiT。** `transformer/config.json` 声明 `num_layers=32`，attention 是 `32` 个头、每头 `128` 维，因此内部宽度为 `4096`。
+输入／输出 latent 通道都是 `64`，`patch_size=1`，条件宽度 `context_in_dim=4096`，`mlp_ratio=3`。
+所以前馈网络的中间宽度是 `4096×3=12288`，而不是把 attention 的头数当作 FFN 宽度。
+`causal_condition=true` 是实际配置字段；`causal_block` 没有写在这份 config 中，当前 Omni 构造函数默认补为 `True`。
+
+**Qwen3-VL 的语言部分。** `text_config` 是 `36` 层、hidden `4096`、FFN `12288`，有 `32` 个 query heads、`8` 个 KV heads，每头 `128` 维。
+因此 Q 投影输出宽度 `4096`，K/V 各为 `1024`，这是分组查询注意力 GQA。
+不是“所有模型里的 Q、K、V 都同宽”；下面会看到生成 DiT 的 K/V 就与 Q 同宽。
+
+**Qwen3-VL 的视觉部分。** `vision_config` 是 `27` 层、hidden `1152`、`16` 个头，每头 `72` 维，FFN 中间宽度 `4304`。
+视觉 patch 为 `16×16`，`temporal_patch_size=2`，空间合并倍率 `2`；输出条件宽度为 `4096`。
+它的职责是读参考图，不能把这套视觉 patch 与 DiT 的 latent patch 混为一谈。
+
+**VAE。** config 声明输入和输出都是 `4` 通道，也就是 RGBA；`z_dim=64`。
+编码器基宽 `96`、解码器基宽 `144`，`dim_mult=[1,2,4,8,8]`，一共五个空间 stage。
+编码方向各 stage 的输出通道依次为 `96 → 192 → 384 → 768 → 768`。
+解码方向在 latent 输入投影到 `1152` 通道后，五个 up stage 输出依次为 `1152 → 1152 → 576 → 288 → 144`，最后输出 `4` 通道。
+这里的 stage 是 VAE 网络内部尺度级别，不是五个 Omni 服务进程。
+
+VAE config 的 `num_res_blocks=2`，源码的 down stage 使用两块，而 up stage 使用 `num_res_blocks+1=3` 块。
+“VAE 有五个 stage”不等于“VAE 只有五层”，其中还有卷积、残差块和中间模块。
+四次空间缩放得到 `16×` 压缩；config 同时有时间压缩 `8×`，静态图像例子只使用单帧轴，不据此把空间倍率改成 8。
+
+[固定 DiT 配置](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/transformer/config.json)、[Qwen3-VL 配置](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/text_encoder/config.json)、[VAE 配置](https://huggingface.co/Qwen/Qwen-Image-2.1/blob/d26bb61231c349cf6b7896fa83353113880e1ba3/vae/config.json)。
+
+### 2.4 只读权重 header，验证参数名和 shape
+
+本次没有下载几十 GB 权重。对四个实际 safetensors 文件，先用 HTTP Range 读取前 `8` 字节的小端整数，获得 JSON header 长度，再仅读取对应 header 区间。
+服务器均返回 `206 Partial Content`，读取的 header 与长度前缀总计 `112632` 字节，未读取 tensor 数据区。
+因此以下是**真实文件声明的参数名、shape、存储 dtype**，不是随机初始化模型的 `state_dict` 推测；它不验证权重数值或推理质量。
+
+DiT 第一分片中的代表参数：
+
+```text
+img_in.weight                                  [4096, 64]      BF16
+transformer_blocks.0.attn.to_q.weight            [4096, 4096]    BF16
+transformer_blocks.0.attn.to_k.weight            [4096, 4096]    BF16
+transformer_blocks.0.attn.to_v.weight            [4096, 4096]    BF16
+transformer_blocks.0.attn.to_out.0.weight        [4096, 4096]    BF16
+transformer_blocks.0.img_mlp.gate_layer.weight   [12288, 4096]   BF16
+transformer_blocks.0.img_mlp.proj.weight         [12288, 4096]   BF16
+transformer_blocks.0.img_mlp.out.weight          [4096, 12288]   BF16
+```
+
+DiT 第二分片的 `proj_out.weight` 是 `[64,4096] BF16`，负责回到 latent 通道。
+第 `0` 块只是代表性核对；网络一共有 config 声明的 32 块，不是只有 header 示例这一个 block。
+
+Qwen3-VL 第一分片则能直接看到两套不同网络：
+
+```text
+model.language_model.layers.0.self_attn.q_proj.weight  [4096, 4096]
+model.language_model.layers.0.self_attn.k_proj.weight  [1024, 4096]
+model.language_model.layers.0.self_attn.v_proj.weight  [1024, 4096]
+model.visual.blocks.0.attn.qkv.weight                  [3456, 1152]
+model.visual.blocks.0.mlp.linear_fc1.weight            [4304, 1152]
+model.visual.patch_embed.proj.weight                   [1152, 3, 2, 16, 16]
+```
+
+这些条目的文件存储 dtype 均为 BF16。
+视觉 attention 已把 Q/K/V 合在一个矩阵里，`3456=3×1152`；语言部分 K/V 较窄，对应前面的 8 个 KV heads。
+视觉 patch 投影是五维卷积核 `[out,in,time,height,width]`，不能套二维 Linear 的规则。
+
+VAE 的独立文件中，`encoder.conv_in.weight=[96,4,3,3]`，`decoder.conv_in.weight=[1152,64,3,3]`，`decoder.conv_out.weight=[4,144,3,3]`，存储 dtype 均为 F32。
+它们分别确认 RGBA 入口、64 通道 latent 入口与 RGBA 出口。
+`encoder.conv_out.weight=[128,768,3,3]` 的 `128` 是分布参数的两组 `64` 通道，不是最终 latent 变成 128 通道。
+权重文件存储 dtype 与运行时 dtype 不是同一个概念；加载器仍可能按执行配置转换。
+
+### 2.5 用一个 block 走通 `[B,L,C]` 与 `[out,in]`
+
+对普通 Linear，权重 `W=[out,in]`，输入 `X=[B,L,in]`，计算为 `Y=XWᵀ`，得到 `[B,L,out]`。
+`B` 是请求批大小，`L` 是当前序列长度，`C` 是每个位置的特征宽度。
+**B 和 L 属于本次请求的激活张量，不是 safetensors 权重中隐藏的轴。**
+
+先取一个只有目标图像的 1024×1024 文生图例子。
+目标 latent 展平为 `[1,4096,64]`，其中第二个 `4096` 表示位置数量。
+经过 `img_in.weight=[4096,64]` 后变成 `[1,4096,4096]`，最后一个 `4096` 才表示特征宽度。
+二者碰巧相等，不是同一概念。
+加入文字后，设联合有效序列长为 `L=4096+P`，`P` 是本次文本条件长度；参考图还会另外增加位置。
+
+进入第 0 个 DiT block，忽略不改变 shape 的归一化与时间调制：
+
+```text
+联合输入 X              [1, L, 4096]
+Q = X Wqᵀ              [1, L, 4096] → [1, L, 32, 128]
+K = X Wkᵀ              [1, L, 4096] → [1, L, 32, 128]
+V = X Wvᵀ              [1, L, 4096] → [1, L, 32, 128]
+按头做 attention        每头 query 读取允许位置的 K/V
+拼回各头                [1, L, 4096]
+输出投影与残差          [1, L, 4096]
+```
+
+实现后端可用不同轴顺序或分段 attention，这里展示的是逻辑 shape。
+mask 与 RoPE 决定能看哪里和位置关系，不把特征宽度从 4096 改成其他数。
+缓存 decode 时只重新计算目标 query，前缀 K/V 来自缓存，因此 Q 和完整 K/V 的序列长度可不同。
+
+同一 block 的 SwiGLU 前馈路径：
+
+```text
+gate = X Wgateᵀ          [1, L, 12288]
+up   = X Wprojᵀ          [1, L, 12288]
+silu(gate) ⊙ up          [1, L, 12288]  # 逐元素相乘
+乘 Woutᵀ                [1, L, 4096]
+加回残差                [1, L, 4096]
+```
+
+这样 32 个 block 可以首尾相接：每块内部扩宽到 12288，再回到 4096。
+最后 `proj_out=[64,4096]` 将目标位置投影为 `[1,4096,64]`，然后恢复 latent 网格并送往 VAE。
+这就是“读权重 shape”与“读一次 forward”之间的联系。
+
+### 2.6 从 checkpoint 名字走到 Omni 加载对象
+
+Omni 的 `QwenImage21Pipeline.__init__` 为 transformer 注册 `subfolder="transformer"`、`prefix="transformer."`。
+文件中的 `img_in.weight` 因而可以按组件被识别为 transformer 的参数；模型自己的 `load_weights()` 再移除组件前缀。
+text encoder 和 VAE 通常通过各自的 `from_pretrained(..., subfolder=...)` 加载；量化 text encoder 路径另行注册带 `text_encoder.` 前缀的权重源。
+
+还有一处容易误判：checkpoint 保存分开的 `attn.to_q/to_k/to_v`，Omni 实现使用融合 `to_qkv`。
+`load_weights()` 的 `stacked_params_mapping` 将三个参数按 q/k/v shard 写入融合参数。
+所以“文件里没有 to_qkv”不是漏权重；必须同时核对加载映射与模型成员名。
+以上逻辑依据 [pipeline 组件初始化](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/diffusion/models/qwen_image_21/pipeline_qwen_image_21.py) 与 [Transformer 加载映射](https://github.com/vllm-project/vllm-omni/blob/910b8f07d23c7f387729173333c9d5f927dc6c4f/vllm_omni/diffusion/models/qwen_image_21/qwen_image_21_transformer.py#L1429)。
+
+最后检查 `scheduler/scheduler_config.json`：本权重的 `max_image_seq_len=8192`、`max_shift=0.9`，并开启 dynamic shifting。
+源码里缺配置时的 fallback `4096/1.15` 不能当作这个 checkpoint 的实际值。
+调度器没有神经网络参数，并不表示它的配置对结果没有影响。
 
 ## 3. latent 是什么：把大图缩成计算用的草稿
 

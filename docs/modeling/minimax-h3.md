@@ -7,6 +7,193 @@
 !!! info "阅读坐标与证据边界"
     本篇核对日期为 2026-10-15。工程分析固定在 vLLM-Omni 快照 `910b8f07d23c7f387729173333c9d5f927dc6c4f`，文末提供源码链接。模型能力以 MiniMax 官方模型卡为补充；默认配置、可选实现与实机性能是不同层次。本篇没有执行权重推理或测量加速比。
 
+## 0. 从 checkpoint 到模型结构：先看真实配置和权重
+
+### 0.1 这一节究竟检查了什么
+
+这次以官方仓库 `MiniMaxAI/MiniMax-H3` 的固定 revision
+[`42ed227ee7df40d41602854ae760620d6eb651fe`](https://huggingface.co/MiniMaxAI/MiniMax-H3/tree/42ed227ee7df40d41602854ae760620d6eb651fe) 为依据。
+先读取配置 JSON，再通过 HTTP Range 读取代表性 safetensors 文件的**头部**。
+没有下载几十 GB 参数，也没有执行模型 forward。
+
+下文用三个证据标签区分数字来源：**[配置]** 是实际发布 config，**[头部]** 是实际参数名与 shape，**[推导]** 是根据这些形状手算的 forward 尺寸。
+[精简核对记录](checkpoints/minimax-h3.json) 保存 revision、配置来源和代表 tensor，可与本文逐项复查。
+
+原生 FL2VA 家族的文件树如下，Ref2VA 有平行的一套组件：
+
+```text
+MiniMax-H3/
+├── FL2VA/
+│   ├── processor/、tokenizer/
+│   ├── text_encoder/config.json
+│   ├── text_encoder/model-00001-of-00014.safetensors …
+│   ├── text_encoder/model.safetensors.index.json
+│   ├── transformer/config.json
+│   ├── transformer/model-00001-of-00013.safetensors …
+│   ├── transformer/model.safetensors.index.json
+│   ├── video_vae/config.json
+│   ├── video_vae/source/model.safetensors
+│   └── audio_vae/config.json、model.safetensors
+├── Ref2VA/ …
+└── transformer/、transformer_ref/、vae/、text_encoder/ …
+```
+
+根目录还提供另一套 Diffusers 组织方式。
+不要把根目录 Diffusers tensor 名和 `FL2VA/` 的原生 tensor 名混写成同一份文件布局。
+`model-00001-of-00013` 是权重存储分片，不是“第一个模型有 13 层”。
+层数来自 config；index JSON 用于定位每个 tensor 属于哪个分片。
+
+### 0.2 文本编码器：发布 64 层，Omni 实际取前 50 层
+
+[配置] `FL2VA/text_encoder/config.json` 的架构为 `Qwen3VLForConditionalGeneration`。
+其 `text_config` 是：
+
+```text
+num_hidden_layers = 64         hidden_size = 5120
+num_attention_heads = 64       num_key_value_heads = 8
+head_dim = 128                intermediate_size = 25600
+vocab_size = 151936
+```
+
+它还带视觉塔：[配置] `vision_config.depth=27`、`hidden_size=1152`、`num_heads=16`、`out_hidden_size=5120`。
+所以“文本编码器”不是说这个组件只能接受纯文字，参考视觉素材可通过 Qwen3-VL 的处理路径形成条件特征。
+
+[头部] 第一个文本分片实际读到：
+
+```text
+model.language_model.embed_tokens.weight              [151936, 5120] BF16
+model.language_model.layers.0.self_attn.q_proj.weight    [8192, 5120] BF16
+model.language_model.layers.0.self_attn.k_proj.weight    [1024, 5120] BF16
+model.language_model.layers.0.self_attn.v_proj.weight    [1024, 5120] BF16
+model.language_model.layers.0.self_attn.o_proj.weight    [5120, 8192] BF16
+model.language_model.layers.0.mlp.gate_proj.weight      [25600, 5120] BF16
+```
+
+[推导] 对 `[B,L,5120]` 的 residual stream，Q 投影变为 `[B,L,8192]`，再拆成 64 个宽 128 的 head。
+K/V 只拆成 8 个 head，因此是 GQA；不需要存 64 份完全独立的 K/V。
+注意 residual 宽 5120 **不等于** $64\times128=8192$，输出投影负责映射回来。
+
+但 Omni `text_encoder.py` 明确把执行深度设为 50，读取第 50 层后的 residual，而不是执行完整 64 层再取最终 logits。
+加载器会跳过层号大于等于 50 的参数，并跳过 checkpoint final norm 与 `lm_head`；构造时以 residual merge 替换最终归一化。
+**checkpoint 的发布深度、服务实际执行深度、DiT 自己的层数，必须分别记。**
+
+### 0.3 联合 DiT：50 层、5376 宽，但注意力内部是 7168 宽
+
+[配置] `FL2VA/transformer/config.json` 与此次读取的 `Ref2VA/transformer/config.json` 在以下结构字段一致：
+
+```text
+num_layers = 50                token_refiner_num_layers = 2
+hidden_size = 5376             num_attention_heads = 56
+attention_head_dim = 128       ffn_hidden_size = 14336
+latents_dim = 24               audio_latents_dim = 32
+patch_size = [1,2,2]           text_dim = 5120
+time_embed_dim = 2688          adaln_out_features = 96768
+```
+
+50 个主层和 2 个 refiner 层是不同模块；不能把所有层统一说成 52 次相同主层计算。
+下面只列实际头部中读到的关键矩阵。
+PyTorch Linear 的 weight 习惯为 `[out_features,in_features]`，因此计算是 $Y=XW^T$。
+
+```text
+video_patch_proj.weight                  [5376, 96]      F32
+audio_patch_proj.weight                  [5376, 32]      F32
+condition_proj.weight                    [5376, 5120]    BF16
+blocks.0.attn.qkv_proj.weight             [21504, 5376]   BF16
+blocks.0.attn.out_proj.weight             [5376, 7168]    BF16
+blocks.0.mlp.fc1.weight                   [28672, 5376]   BF16
+blocks.0.mlp.fc2.weight                   [5376, 14336]   BF16
+blocks.0.adaln_proj.linear.weight         [96768, 2688]   BF16
+final_layer.video_out.weight             [96, 5376]      F32
+final_layer.audio_out.weight             [32, 5376]      F32
+```
+
+前八项取自第 1 个 DiT 分片，最终输出头取自第 13 个分片。
+它们是实际存储 dtype；运行时激活与算子内部精度还要看加载策略和 backend，不能只看一个 BF16 标签。
+
+### 0.4 用真实矩阵走一次 forward 的形状
+
+设 $B$ 是 batch，$N_v$ 是每个请求的视频 patch 数。
+下列形状是按真实 config/header **推导**，没有宣称已实跑：
+
+```text
+视频 latent        [B,24,T,H,W]
+切成1×2×2 patch   [B,N_v,96]        N_v=T×(H/2)×(W/2)
+视频输入投影        [B,N_v,5376]
+QKV融合投影         [B,N,21504]      N包含当前联合序列的各类token
+拆为Q、K、V         各[B,N,7168]
+拆head              各[B,N,56,128]
+注意力输出再投影     [B,N,5376]
+MLP fc1             [B,N,28672] → 两半各[B,N,14336]
+门控后fc2           [B,N,5376]
+视频输出投影        [B,N_v,96] → 还原[B,24,T,H,W]
+```
+
+$21504=3\times56\times128$，$28672=2\times14336$，$96=24\times1\times2\times2$。
+音频每个 token 是 32 维 latent，经输入投影到 5376，再由 32 维输出头还原；双声道数是额外布局维度，不是把 32 改成 64。
+文字条件从 5120 投影到 5376，才能进入同一主干工作宽度。
+
+这也解释了为什么修改 hidden size 不是改一个 config 数字就能运行。
+输入、QKV、输出、FFN 与 AdaLN 的矩阵形状是一组联动约束，必须与训练权重一致。
+
+### 0.5 分片权重怎样对应 Omni 参数
+
+`MiniMaxH3DiTArchConfig.from_mapping` 从实际配置建立模块，不能把源码默认值当作证据终点。
+原生 checkpoint 的 `blocks.0.attn.qkv_proj.weight` 虽然已经融合，却按 head group 组织 Q/K/V 行。
+`_reorder_grouped_qkv_to_qkv` 会先 reshape 成按 head 分组，再重排成全部 Q、全部 K、全部 V，交给 TP-aware loader。
+**shape 一样但行顺序不同，注意力就会计算错误。**
+
+`mlp.fc1.weight` 按两半加载到 merged gate/up 参数；TP loader 再按设备 rank 切分。
+因此 header 里 `[21504,5376]` 是全局权重形状，不是每张 TP 卡最终驻留矩阵的形状。
+Diffusers 路径还会解析另一套名字，分别将 `to_q/to_k/to_v` 装入融合参数，并检查三部分是否齐全。
+
+Visual VAE 的实际 wrapper config 给出 `latent_channels=24`，Audio VAE 给出 `latent_channels=32` 与 `sample_rate=32000`。
+接下来继续用实际 VAE 配置与头部，把像素、波形和 latent 接起来。
+
+### 0.6 两个 VAE 也有真实结构：像素/波形怎样接上 latent
+
+**Visual VAE 的 encoder 是卷积结构，当前发布 decoder 是 ViT。**
+[配置] `FL2VA/video_vae/source/config.json` 给出 RGB 输入/输出各 3 通道，`ch=128`，六级 `ch_mult=[1,2,2,4,4,8]`，`num_res_blocks=2`。
+因此各级基础宽度依次为 128、256、256、512、512、1024；每级 residual block 数为 2，这不是“整个 VAE 只有两个 block”。
+空间下采样因子 `[2,2,2,2,1,1]` 乘积为 16，时间下采样 `[1,2,2,1,1,1]` 乘积为 4。
+它们说明卷积主干的名义压缩倍率；具体首帧、17 帧分块和 token drop 仍会影响时间长度，不能直接把任意帧数除以 4。
+
+[头部] 实读 `video_vae/source/model.safetensors` 的代表参数：
+
+```text
+encoder.conv_in.weight       [128,3,3,3,3]     F32
+encoder.conv_out.weight      [48,1024,3,3,3]   F32
+decoder.x_embedder.weight     [2048,24]         F32
+decoder.proj_out.weight       [3072,2048]       F32
+```
+
+3D 卷积入口把 RGB 的 3 通道变成 128 通道特征；输出 48 通道是 24 维高斯 latent 的两组分布参数，不是给 DiT 的 48 个 latent 通道。
+来源 `klvae.py` 中 `double_z=True`、`quant_conv` 与 `DiagonalGaussianDistribution`；进入生成主干的 latent 仍是 24 通道。
+[配置] `use_vit_decoder=true`、`vit_decoder_kwargs.num_layers=36`、32 heads、每头 64 维，所以 decoder 的工作宽度是 2048。
+[推导] decoder 将 24 维 latent 投影到 2048，最终输出 $3072=3\times4\times16\times16$ 维 patch，重组为 RGB 时空块。
+这里 ViT decoder 的 36 层与生成 DiT 的 50 层属于两套不同权重。
+
+**Audio VAE 的内部卷积网络每次处理单声道，立体声由外部拆分和重组。**
+[配置] `audio_vae/config.yaml` 的 `audio_channel=1`、`vae_latent_channels=32`；wrapper config 的 `output_channel=2` 表示最终双声道。
+`audio_vae/metadata.json` 给出 5 级 encoder rates `[2,4,4,5,5]`，乘积 800；$32000/800=40$，这就是每声道 40 Hz latent 网格的来源。
+其 decoder 类型为 `bigvgan`，7 级 rates `[5,5,2,2,2,2,2]` 乘积同为 800；不是另一套语言模型。
+
+[头部] 实读 `audio_vae/model.safetensors`：
+
+```text
+encoder.block.0.weight_v       [64,1,7]        F32
+mean_proj.weight              [32,32,1]       F32
+dec_in_proj.weight            [2048,32,1]     F32
+decoder.conv_post.weight_v    [1,8,7]         F32
+```
+
+入口卷积从单声道波形形成 64 通道特征，经下采样与中间投影形成 32 维 latent；解码入口将 32 通道展开到 2048，再经 decoder 回到一个波形通道。
+所以 10 秒立体声是两路 `[1,320000]` 波形分别编码成 `[32,400]` latent，而不是一个“64 通道音频 VAE”。
+`weight_v` 是 weight normalization 中的方向参数，需与对应 `weight_g` 共同构成实际卷积权重。
+
+以上配置和头部条目均已补入[核对记录](checkpoints/minimax-h3.json)。
+相关远程结构源码也固定在同一 HF revision：[klvae.py](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/klvae.py)、[vae_vit.py](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/42ed227ee7df40d41602854ae760620d6eb651fe/FL2VA/video_vae/vae_vit.py)。
+这一步只核对组件契约与结构，不把读取 header 当成已经验证重建质量。
+
 ## 1. 先用一个小任务理解 H3
 
 设想你想生成这样的片段：
@@ -106,7 +293,7 @@ VAE 可以类比为一种“适合生成模型操作的媒体压缩格式”。
 模型再以 `(1, 2, 2)` 的 patch 切分 latent。
 每个 patch 含 $1\times2\times2$ 个 latent 位置。
 
-假设 $B=1$，且 latent 形状为 `[1, 24, 7, 48, 80]`，则：
+采用本次实读的 24 个视频 latent 通道，再取演示用尺寸 $B=1,T=7,H=48,W=80$，latent 形状为 `[1, 24, 7, 48, 80]`，则：
 
 $$
 N_v=7\times(48/2)\times(80/2)=6720
@@ -152,8 +339,8 @@ $$
 - `layout`：哪些 token 属于哪种模态、哪些位置是条件、哪些位置要更新。
 - $v_v,v_a$：模型预测的更新方向，而非最终的像素和波形。
 
-工程默认架构配置包含 50 个主层、hidden size 5376、56 个注意力头，以及 2 个 token refiner 层。
-实际加载时应以 checkpoint 配置解析结果为准，不能把 dataclass 默认值当成所有变体的硬约束。
+本次实读 FL2VA/Ref2VA 配置包含 50 个主层、hidden size 5376、56 个注意力头，以及 2 个 token refiner 层。
+相应真实矩阵与各维度关系已在第 0 节展开；未来换 checkpoint 时仍须重新读取实际配置。
 
 所谓 **single-stream**，重点是不同模态进入共享 Transformer 主干进行信息交互。
 它不意味着所有模态使用相同的原始输入格式。
