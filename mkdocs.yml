@@ -8,7 +8,7 @@ repo_url: https://github.com/FayeSpica/learn-omni
 edit_uri: edit/main/docs/
 
 theme:
-  name: material
+  variant: modern
   language: zh
   features:
     - navigation.tabs

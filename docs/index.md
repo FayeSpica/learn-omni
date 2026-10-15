@@ -64,6 +64,6 @@ hide:
 
 ## 关于本站
 
-- 使用 [MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/) 构建
+- 使用 [Zensical](https://zensical.org/) 构建
 - 源码托管在 [GitHub](https://github.com/FayeSpica/learn-omni)，推送到 `main` 自动部署
 - 支持全文搜索、深色模式、代码高亮、Mermaid 图与数学公式

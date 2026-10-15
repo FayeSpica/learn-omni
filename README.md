@@ -1,6 +1,6 @@
 # learn-omni
 
-vLLM / vllm-ascend / vllm-omni 学习笔记，基于 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) 构建，部署在 GitHub Pages。
+vLLM / vllm-ascend / vllm-omni 学习笔记，基于 [Zensical](https://zensical.org/) 构建，部署在 GitHub Pages。
 
 🔗 在线访问：<https://fayespica.github.io/learn-omni/>
 
@@ -17,7 +17,7 @@ docs/
 │   └── index.md
 └── vllm-omni/        # vllm-omni 任意模态框架
     └── index.md
-mkdocs.yml            # 站点配置与导航
+mkdocs.yml            # 站点配置与导航（Zensical 兼容格式）
 requirements.txt      # 构建依赖
 .github/workflows/    # 推送到 main 自动部署
 ```
@@ -26,7 +26,7 @@ requirements.txt      # 构建依赖
 
 ```bash
 pip install -r requirements.txt
-mkdocs serve
+zensical serve
 ```
 
 打开 <http://127.0.0.1:8000> 即可实时预览。
