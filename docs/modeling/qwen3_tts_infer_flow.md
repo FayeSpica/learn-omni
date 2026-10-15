@@ -42,24 +42,51 @@ Qwen3-TTS-12Hz-1.7B-CustomVoice/
 
 ### 0.2 config.json 如何确定模型结构？
 
-根配置包含以下关键字段：
+根配置声明 `model_type="qwen3_tts"`、`architectures=["Qwen3TTSForConditionalGeneration"]`。
+先对照下表认识组件，再看它们怎样被装进两个 Stage。
 
-```text
-model_type = "qwen3_tts"
-architectures = ["Qwen3TTSForConditionalGeneration"]
-|
-`-- talker_config
-    |-- hidden_size = 2048
-    |-- num_hidden_layers = 28
-    |-- vocab_size = 3072
-    |-- text_vocab_size = 151936
-    |-- text_hidden_size = 2048
-    |-- num_code_groups = 16
-    `-- code_predictor_config
-        |-- hidden_size = 1024
-        |-- num_hidden_layers = 5
-        `-- vocab_size = 2048
-```
+以下数值来自本篇固定 revision 的 1.7B CustomVoice checkpoint 配置。
+Talker 与 CodePredictor 从根 `config.json` 的 `talker_config` 及其嵌套配置读取；Codec decoder 从 `speech_tokenizer/config.json` 的 `decoder_config` 读取。
+
+#### 三套 Transformer 的层数与宽度
+
+`hidden size` 是残差流的特征宽度，`intermediate size` 是 FFN 中间宽度；Q / KV heads 分别是查询头与键值头数。
+层数指重复的 Transformer block 数，不是权重矩阵数，也不是 Omni Stage 数。
+
+| 参数 | Talker | CodePredictor | Codec decoder 的 Transformer |
+|---|---:|---:|---:|
+| 层数 | 28 | 5 | 8 |
+| hidden size | 2048 | 1024 | 512 |
+| intermediate size | 6144 | 3072 | 1024 |
+| Q heads | 16 | 16 | 16 |
+| KV heads | 8 | 8 | 16 |
+| head dim | 128 | 128 | 64 |
+| Q 投影输出宽度 | 2048 | 2048 | 1024 |
+| K/V 各自输出宽度 | 1024 | 1024 | 1024 |
+| Attention 范围 | 因果全注意力 | 帧内短序列因果注意力 | sliding window=72 |
+| 状态保留 | 引擎管理 Talker KV | 当前实现 re-prefill，无持久 KV | 流式路径按请求保存状态 |
+
+#### 词表、码本与音频尺寸
+
+其他关键参数：
+
+| 参数 | 值 | 用途 |
+|---|---:|---|
+| `text_vocab_size` | 151936 | 文本 embedding 词表 |
+| `text_hidden_size` | 2048 | 文本查表后的宽度 |
+| Talker `vocab_size` | 3072 | 包含实际 codec ID 和控制、语言、speaker 等 ID |
+| CodePredictor `vocab_size` | 2048 | 每个残差码本预测头的类别数 |
+| `num_code_groups` | 16 | 主码本 1 个，残差码本 15 个 |
+| `codec_pad_id / codec_bos_id / codec_eos_token_id` | 2148 / 2149 / 2150 | codec 条件与停止标记 |
+| `tts_pad / tts_bos / tts_eos` | 151671 / 151672 / 151673 | 文本侧 TTS 特殊 ID |
+| `output_sample_rate` | 24000 | 输出波形采样率 |
+| `decode_upsample_rate` | 1920 | 每 codec 帧的波形采样点数 |
+
+注意力投影宽度与音频帧率的计算如下：
+
+1. CodePredictor 的 `hidden_size=1024`，但 `16×128=2048`；它的 Q 投影扩展到 2048 维，O 投影再回到 1024 维。
+2. Codec decoder 同样会从 hidden 512 投影到 `16×64=1024` 的注意力空间，再映射回来；不要默认 hidden 必须等于头数乘 head_dim。
+3. 模型名称写 “12Hz”，按配置计算的帧率是 `24000/1920=12.5 Hz`，即每帧 80 ms。音频长度由 tokenizer 的采样率和上采样率计算。
 
 vLLM-Omni 根据 `qwen3_tts` 选择 `QWEN3_TTS_PIPELINE`，从 pipeline 与 deploy 配置获得两个 Stage 的模型类和执行配置：[vllm_omni/model_executor/models/qwen3_tts/pipeline.py:32](https://github.com/vllm-project/vllm-omni/blob/3d43571b94f1683412023c45bd886f9ce30f76bd/vllm_omni/model_executor/models/qwen3_tts/pipeline.py#L32)、[vllm_omni/deploy/qwen3_tts.yaml:24](https://github.com/vllm-project/vllm-omni/blob/3d43571b94f1683412023c45bd886f9ce30f76bd/vllm_omni/deploy/qwen3_tts.yaml#L24)
 
@@ -254,39 +281,15 @@ CodePredictor 在 Stage 0 内被调用。Stage 1 通过 `LLM_GENERATION` 执行�
 
 ## 2. Talker、CodePredictor 和 Codec decoder 的配置分别是什么？
 
-以下参数来自 1.7B CustomVoice checkpoint 的配置。
+层数、宽度与词表的统一对照见 [§0.2 模型结构表](#02-configjson)。这里再按输入输出区分三套模块：
 
-| 参数 | Talker | CodePredictor | Codec decoder 的 Transformer |
-|---|---:|---:|---:|
-| 层数 | 28 | 5 | 8 |
-| hidden size | 2048 | 1024 | 512 |
-| intermediate size | 6144 | 3072 | 1024 |
-| Q heads | 16 | 16 | 16 |
-| KV heads | 8 | 8 | 16 |
-| head dim | 128 | 128 | 64 |
-| Q 投影输出宽度 | 2048 | 2048 | 1024 |
-| K/V 各自输出宽度 | 1024 | 1024 | 1024 |
-| Attention 范围 | 因果全注意力 | 帧内短序列因果注意力 | sliding window=72 |
-| 状态保留 | 引擎管理 Talker KV | 当前实现 re-prefill，无持久 KV | 流式路径按请求保存状态 |
+| 模块 | 输入表示 | 主要输出 | 生成推进方向 | 所属 Stage |
+| --- | --- | --- | --- | --- |
+| Talker | 文本 / codec 条件的 2048 维 embedding | 采样位置的 3072 类 logits，再取主码本 ID | 沿音频时间逐帧推进 | Stage 0 |
+| CodePredictor | 当前 Talker hidden 与主码本 embedding，经 `2048 → 1024` 投影 | 补齐 15 个残差码，组合为 `[B,16]` 完整帧 | 同一帧内逐码本推进 | Stage 0 内部 |
+| Codec decoder | `[B,16,T]` codec ID | 完整序列数学路径输出 `[B,1,T×1920]` 波形 | 对已有帧块解码 | Stage 1 |
 
-其他关键参数：
-
-| 参数 | 值 | 用途 |
-|---|---:|---|
-| `text_vocab_size` | 151936 | 文本 embedding 词表 |
-| `text_hidden_size` | 2048 | 文本查表后的宽度 |
-| Talker `vocab_size` | 3072 | 包含实际 codec ID 和控制、语言、speaker 等 ID |
-| CodePredictor `vocab_size` | 2048 | 每个残差码本预测头的类别数 |
-| `num_code_groups` | 16 | 主码本 1 个，残差码本 15 个 |
-| `codec_pad_id / codec_bos_id / codec_eos_token_id` | 2148 / 2149 / 2150 | codec 条件与停止标记 |
-| `tts_pad / tts_bos / tts_eos` | 151671 / 151672 / 151673 | 文本侧 TTS 特殊 ID |
-| `output_sample_rate` | 24000 | 输出波形采样率 |
-| `decode_upsample_rate` | 1920 | 每 codec 帧的波形采样点数 |
-
-注意力投影宽度与音频帧率的计算如下：
-
-1. CodePredictor 的 `hidden_size=1024`，但 `16×128=2048`；它的 Q 投影扩展到 2048 维，O 投影再回到 1024 维。
-2. 模型名称写 “12Hz”，按配置计算的帧率是 `24000/1920=12.5 Hz`，即每帧 80 ms。音频长度由 tokenizer 的采样率和上采样率计算。
+`B` 是真实请求批大小，`T` 是 codec 帧数。Codec decoder 还含 RVQ、卷积和上采样，不只有表中的 8 层 Transformer；流式执行还要携带历史状态并裁掉上下文对应的重复波形。
 
 ## 3. 阶段一：请求如何变成 Talker 的输入
 
@@ -805,61 +808,29 @@ sum first + remaining -> quantized [B,512,T]
 
 下面描述 `_forward_exact()` 的数学形状，假设输入 `[2,16,25]` 且两行都有 25 个有效帧。流式实现通过保存的状态处理新增帧。
 
-```text
-codes                          [2,16,25]
-  |
-  RVQ decode
-  v
-quantized                      [2,512,25]
-  |
-  causal pre_conv: 512 -> 1024
-  v
-                               [2,1024,25]
-  |
-  transpose
-  v
-                               [2,25,1024]
-  |
-  pre_transformer.input_proj: 1024 -> 512
-  v
-                               [2,25,512]
-  |
-  8 Transformer layers + final norm
-  |   Q/K/V heads = 16; head_dim = 64
-  |   sliding attention window = 72
-  v
-                               [2,25,512]
-  |
-  pre_transformer.output_proj: 512 -> 1024
-  v
-                               [2,25,1024]
-  |
-  transpose + two ConvTranspose/ConvNeXt upsampling blocks
-  |   ×2, ×2
-  v
-                               [2,1024,100]
-  |
-  causal conv: 1024 -> 1536
-  v
-                               [2,1536,100]
-  |
-  decoder blocks: ×8, ×5, ×4, ×3
-  |   channels: 1536 -> 768 -> 384 -> 192 -> 96
-  v
-                               [2,96,48000]
-  |
-  SnakeBeta + final causal conv 96 -> 1 + clamp[-1,1]
-  v
-waveform                       [2,1,48000]
-```
+| 步骤 | 运算 / 参数 | 输出 shape |
+| --- | --- | --- |
+| 输入 codec ID | 2 个请求，每帧 16 个码，25 帧 | `[2,16,25]` |
+| RVQ decode | 多码本查表、投影并相加 | `[2,512,25]` |
+| 因果前置卷积 | 通道 `512 → 1024` | `[2,1024,25]` |
+| 换轴 | 通道在前 → 时间在前 | `[2,25,1024]` |
+| Transformer 输入投影 | `1024 → 512` | `[2,25,512]` |
+| 8 层 Transformer + final norm | 16 个 Q/K/V 头，head_dim=64，滑动窗口 72 | `[2,25,512]` |
+| Transformer 输出投影 | `512 → 1024` | `[2,25,1024]` |
+| 换轴与两组上采样块 | ConvTranspose / ConvNeXt，时间各放大 2 倍 | `[2,1024,100]` |
+| 因果卷积 | 通道 `1024 → 1536` | `[2,1536,100]` |
+| 四组 decoder block | 时间依次 ×8、×5、×4、×3；通道 1536 → 768 → 384 → 192 → 96 | `[2,96,48000]` |
+| 输出波形 | SnakeBeta、因果卷积 `96 → 1`、clamp 至 `[-1,1]` | `[2,1,48000]` |
 
-上采样倍率：
+对应的长度计算：
 
-```text
-2 × 2 × 8 × 5 × 4 × 3 = 1920
-25 × 1920 = 48000 samples
-48000 / 24000 = 2 seconds
-```
+| 项目 | 计算 | 结果 |
+| --- | --- | --- |
+| 总上采样倍率 | `2×2×8×5×4×3` | 1920 个采样点 / codec 帧 |
+| 每个请求的采样点数 | `25×1920` | 48000 |
+| 每个请求的音频时长 | `48000/24000` | 2 秒 |
+
+最后一个 shape 的 `2` 是请求数，不是立体声声道数；本 decoder 每个请求输出单声道波形。
 
 codec decoder 的 Transformer 带自己的 layer scale、sliding attention 与残差结构。[vllm_omni/model_executor/models/qwen3_tts/tokenizer_12hz/modeling_qwen3_tts_tokenizer_v2.py:446](https://github.com/vllm-project/vllm-omni/blob/3d43571b94f1683412023c45bd886f9ce30f76bd/vllm_omni/model_executor/models/qwen3_tts/tokenizer_12hz/modeling_qwen3_tts_tokenizer_v2.py#L446)
 
